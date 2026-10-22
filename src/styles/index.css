@@ -1,0 +1,327 @@
+@import './tokens.css';
+
+/* ==================================================
+   CAMPUSFIX GLOBAL STYLES & NEO-BRUTALIST UTILITIES
+   ================================================== */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  min-height: 100vh;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color var(--transition-normal), color var(--transition-normal);
+}
+
+/* Typography Classes */
+.font-heading {
+  font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+  letter-spacing: -0.025em;
+  font-weight: 700;
+}
+
+.font-body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: -0.02em;
+}
+
+/* Focus Management */
+:focus-visible {
+  outline: 3px solid var(--accent-lime);
+  outline-offset: 2px;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: var(--radius-sm);
+}
+
+/* Core Neo-Brutalist Components */
+
+/* Neo Box / Card */
+.neo-card {
+  background-color: var(--bg-surface);
+  border: var(--border-width) solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-offset);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), background-color var(--transition-normal);
+}
+
+.neo-card-interactive {
+  cursor: pointer;
+}
+
+.neo-card-interactive:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-hover);
+}
+
+/* Neo Buttons */
+.neo-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 700;
+  font-size: 0.925rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: var(--radius-md);
+  border: var(--border-width) solid var(--border-color);
+  box-shadow: var(--shadow-offset);
+  cursor: pointer;
+  text-decoration: none;
+  user-select: none;
+  white-space: nowrap;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), background-color var(--transition-fast);
+}
+
+.neo-btn:hover:not(:disabled) {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-hover);
+}
+
+.neo-btn:active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: var(--shadow-active);
+}
+
+.neo-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: var(--shadow-offset-xs);
+  transform: none;
+}
+
+/* Button Variants */
+.neo-btn-primary {
+  background-color: var(--accent-lime);
+  color: var(--accent-lime-text);
+}
+
+.neo-btn-primary:hover:not(:disabled) {
+  background-color: var(--accent-lime-hover);
+}
+
+.neo-btn-secondary {
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+}
+
+.neo-btn-secondary:hover:not(:disabled) {
+  background-color: var(--bg-surface-secondary);
+}
+
+.neo-btn-blue {
+  background-color: var(--accent-blue);
+  color: var(--accent-blue-text);
+}
+
+.neo-btn-blue:hover:not(:disabled) {
+  background-color: var(--accent-blue-hover);
+}
+
+.neo-btn-danger {
+  background-color: var(--accent-red);
+  color: var(--accent-red-text);
+}
+
+.neo-btn-danger:hover:not(:disabled) {
+  background-color: var(--accent-red-hover);
+}
+
+.neo-btn-sm {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.825rem;
+  box-shadow: var(--shadow-offset-xs);
+}
+
+.neo-btn-sm:hover:not(:disabled) {
+  transform: translate(-1.5px, -1.5px);
+  box-shadow: var(--shadow-offset);
+}
+
+.neo-btn-sm:active:not(:disabled) {
+  transform: translate(1.5px, 1.5px);
+  box-shadow: 0 0 0;
+}
+
+.neo-btn-lg {
+  padding: 0.875rem 1.75rem;
+  font-size: 1.05rem;
+  box-shadow: var(--shadow-offset-lg);
+}
+
+/* Neo Inputs & Form Controls */
+.neo-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  width: 100%;
+}
+
+.neo-label {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.neo-input,
+.neo-select,
+.neo-textarea {
+  width: 100%;
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+  border: var(--border-width) solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-offset-xs);
+  padding: 0.65rem 0.85rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.95rem;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.neo-input:focus,
+.neo-select:focus,
+.neo-textarea:focus {
+  outline: none;
+  border-color: var(--border-color);
+  box-shadow: var(--shadow-offset);
+  background-color: var(--bg-surface);
+}
+
+.neo-input::placeholder,
+.neo-textarea::placeholder {
+  color: var(--text-muted);
+}
+
+.neo-input-error {
+  border-color: var(--accent-red) !important;
+}
+
+.neo-error-text {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--accent-red);
+  margin-top: 0.2rem;
+}
+
+/* Badges */
+.neo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 0.775rem;
+  letter-spacing: 0.02em;
+  padding: 0.25rem 0.6rem;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  box-shadow: 1.5px 1.5px 0px var(--border-color);
+  text-transform: uppercase;
+}
+
+/* Neo Table */
+.neo-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  border: var(--border-width) solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-offset);
+  background-color: var(--bg-surface);
+}
+
+.neo-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.neo-table th {
+  background-color: var(--bg-surface-secondary);
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.85rem 1rem;
+  border-bottom: var(--border-width) solid var(--border-color);
+}
+
+.neo-table td {
+  padding: 0.95rem 1rem;
+  border-bottom: 1.5px solid var(--border-subtle);
+  color: var(--text-primary);
+  font-size: 0.925rem;
+}
+
+.neo-table tbody tr {
+  transition: background-color var(--transition-fast);
+}
+
+.neo-table tbody tr:hover {
+  background-color: var(--bg-surface-hover);
+}
+
+.neo-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Stagger Animation Utility */
+@keyframes neoFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: neoFadeUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Reduced Motion Preference */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .neo-btn:hover,
+  .neo-card-interactive:hover {
+    transform: none !important;
+  }
+}

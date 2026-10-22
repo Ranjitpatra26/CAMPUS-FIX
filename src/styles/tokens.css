@@ -1,0 +1,135 @@
+/* ==================================================
+   CAMPUSFIX DESIGN TOKENS — NEO-BRUTALISM SYSTEM
+   ================================================== */
+
+:root,
+[data-theme="light"] {
+  /* Surface Colors */
+  --bg-primary: #F7F6F2;
+  --bg-surface: #FFFFFF;
+  --bg-surface-secondary: #E9E8E2;
+  --bg-surface-hover: #F0EFE9;
+
+  /* Text Colors */
+  --text-primary: #171717;
+  --text-secondary: #4A4A4A;
+  --text-muted: #737373;
+  --text-inverse: #FFFFFF;
+
+  /* Brand Accents */
+  --accent-lime: #C8F169;
+  --accent-lime-hover: #B4E647;
+  --accent-lime-text: #171717;
+
+  --accent-blue: #3155E7;
+  --accent-blue-hover: #2243CB;
+  --accent-blue-surface: #EEF2FF;
+  --accent-blue-text: #FFFFFF;
+
+  --accent-orange: #FF9F43;
+  --accent-orange-surface: #FFF5EB;
+  --accent-orange-text: #171717;
+
+  --accent-red: #F25F5C;
+  --accent-red-hover: #DE4845;
+  --accent-red-surface: #FDE8E8;
+  --accent-red-text: #FFFFFF;
+
+  /* Status Colors */
+  --status-submitted-bg: #E8EDFF;
+  --status-submitted-text: #1E3A8A;
+  --status-assigned-bg: #FEF3C7;
+  --status-assigned-text: #92400E;
+  --status-in-progress-bg: #E0E7FF;
+  --status-in-progress-text: #3730A3;
+  --status-resolved-bg: #D1FAE5;
+  --status-resolved-text: #065F46;
+  --status-rejected-bg: #FEE2E2;
+  --status-rejected-text: #991B1B;
+
+  /* Structural Borders & Shadows */
+  --border-color: #171717;
+  --border-subtle: #D2D0C8;
+  --border-width: 2.5px;
+  --border-width-sm: 1.5px;
+  --border-width-lg: 3px;
+
+  --shadow-color: #171717;
+  --shadow-offset-xs: 2px 2px 0px var(--shadow-color);
+  --shadow-offset: 4px 4px 0px var(--shadow-color);
+  --shadow-offset-lg: 6px 6px 0px var(--shadow-color);
+  --shadow-hover: 6px 6px 0px var(--shadow-color);
+  --shadow-active: 0px 0px 0px var(--shadow-color);
+
+  /* Geometry */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-pill: 9999px;
+
+  /* Transitions */
+  --transition-fast: 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-normal: 250ms cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-slow: 350ms cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Layout Dimensions */
+  --sidebar-width-expanded: 260px;
+  --sidebar-width-collapsed: 76px;
+  --navbar-height: 64px;
+}
+
+[data-theme="dark"] {
+  /* Dark Theme Surfaces */
+  --bg-primary: #111214;
+  --bg-surface: #1B1D20;
+  --bg-surface-secondary: #26292E;
+  --bg-surface-hover: #30343B;
+
+  /* Dark Theme Text */
+  --text-primary: #F5F5F0;
+  --text-secondary: #A0A5AE;
+  --text-muted: #7A818E;
+  --text-inverse: #111214;
+
+  /* Brand Accents */
+  --accent-lime: #C8F169;
+  --accent-lime-hover: #D7F785;
+  --accent-lime-text: #111214;
+
+  --accent-blue: #4D70FF;
+  --accent-blue-hover: #6987FF;
+  --accent-blue-surface: #1A244D;
+  --accent-blue-text: #FFFFFF;
+
+  --accent-orange: #FFA959;
+  --accent-orange-surface: #3D2612;
+  --accent-orange-text: #111214;
+
+  --accent-red: #FF6B68;
+  --accent-red-hover: #FF8582;
+  --accent-red-surface: #3E1B1B;
+  --accent-red-text: #FFFFFF;
+
+  /* Dark Theme Status Badges */
+  --status-submitted-bg: #1E284A;
+  --status-submitted-text: #93C5FD;
+  --status-assigned-bg: #3B2A10;
+  --status-assigned-text: #FCD34D;
+  --status-in-progress-bg: #282054;
+  --status-in-progress-text: #C7D2FE;
+  --status-resolved-bg: #123425;
+  --status-resolved-text: #6EE7B7;
+  --status-rejected-bg: #3E1616;
+  --status-rejected-text: #FCA5A5;
+
+  /* Borders & Shadows */
+  --border-color: #383D46;
+  --border-subtle: #292C32;
+  --shadow-color: #050608;
+  --shadow-offset-xs: 2px 2px 0px var(--shadow-color);
+  --shadow-offset: 4px 4px 0px var(--shadow-color);
+  --shadow-offset-lg: 6px 6px 0px var(--shadow-color);
+  --shadow-hover: 6px 6px 0px var(--shadow-color);
+  --shadow-active: 0px 0px 0px var(--shadow-color);
+}
