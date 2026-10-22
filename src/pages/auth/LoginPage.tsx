@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 
 export const LoginPage: React.FC = () => {
-  const { login, switchRole } = useAuth();
+  const { login, switchRole, loginWithCognito, isCognitoConfigured, isMockAuthEnabled, callbackError } = useAuth();
   const { addToast } = useNotification();
   const navigate = useNavigate();
 
@@ -28,6 +28,17 @@ export const LoginPage: React.FC = () => {
   const [rememberMe, setRememberMe] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  const handleCognitoLogin = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      await loginWithCognito();
+    } catch (err: any) {
+      setError(err?.message || 'Cognito sign-in could not be initiated.');
+      setIsLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -128,72 +139,145 @@ export const LoginPage: React.FC = () => {
           </p>
         </div>
 
-        {/* DEMO ACCESS SECTION (Prominent, explicitly labeled) */}
-        <div
-          className="neo-card"
-          style={{
-            padding: '1.25rem',
-            backgroundColor: 'var(--bg-surface-secondary)',
-            marginBottom: '1.75rem',
-            border: '2px solid var(--border-color)',
-            boxShadow: 'var(--shadow-offset)'
-          }}
-        >
+        {/* DEMO ACCESS SECTION (Only shown when mock auth is enabled) */}
+        {isMockAuthEnabled ? (
           <div
+            className="neo-card"
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBottom: '0.75rem'
+              padding: '1.25rem',
+              backgroundColor: 'var(--bg-surface-secondary)',
+              marginBottom: '1.75rem',
+              border: '2px solid var(--border-color)',
+              boxShadow: 'var(--shadow-offset)'
             }}
           >
             <div
-              className="font-mono"
               style={{
-                fontSize: '0.75rem',
-                fontWeight: 800,
-                textTransform: 'uppercase',
-                color: 'var(--text-primary)',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.35rem'
+                justifyContent: 'space-between',
+                marginBottom: '0.75rem'
               }}
             >
-              <Sparkles size={14} color="var(--accent-lime-text)" />
-              <span>TRY THE DEMO (INSTANT ACCESS)</span>
+              <div
+                className="font-mono"
+                style={{
+                  fontSize: '0.75rem',
+                  fontWeight: 800,
+                  textTransform: 'uppercase',
+                  color: 'var(--text-primary)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.35rem'
+                }}
+              >
+                <Sparkles size={14} color="var(--accent-lime-text)" />
+                <span>TRY THE DEMO (INSTANT ACCESS)</span>
+              </div>
+
+              <span
+                className="neo-badge"
+                style={{ backgroundColor: 'var(--accent-lime)', color: '#171717', fontSize: '0.675rem' }}
+              >
+                NO PASSWORD REQUIRED
+              </span>
             </div>
 
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+              <Button
+                type="button"
+                variant="primary"
+                size="md"
+                onClick={() => handleQuickDemo('student')}
+                leftIcon={<GraduationCap size={16} />}
+                disabled={isLoading}
+              >
+                Continue as Student
+              </Button>
+
+              <Button
+                type="button"
+                variant="blue"
+                size="md"
+                onClick={() => handleQuickDemo('admin')}
+                leftIcon={<ShieldAlert size={16} />}
+                disabled={isLoading}
+              >
+                Continue as Administrator
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div
+            className="neo-card"
+            style={{
+              padding: '0.85rem 1.15rem',
+              backgroundColor: 'var(--bg-surface-secondary)',
+              marginBottom: '1.5rem',
+              border: '2px solid var(--border-color)',
+              boxShadow: 'var(--shadow-offset)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between'
+            }}
+          >
+            <div className="font-mono" style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+              CLOUD SSO MODE ACTIVE (MOCK AUTH DISABLED)
+            </div>
             <span
               className="neo-badge"
-              style={{ backgroundColor: 'var(--accent-lime)', color: '#171717', fontSize: '0.675rem' }}
+              style={{ backgroundColor: 'var(--accent-blue)', color: '#FFFFFF', fontSize: '0.675rem' }}
             >
-              NO PASSWORD REQUIRED
+              COGNITO SSO REQUIRED
             </span>
           </div>
+        )}
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-            <Button
-              type="button"
-              variant="primary"
-              size="md"
-              onClick={() => handleQuickDemo('student')}
-              leftIcon={<GraduationCap size={16} />}
-              disabled={isLoading}
-            >
-              Continue as Student
-            </Button>
-
-            <Button
-              type="button"
-              variant="blue"
-              size="md"
-              onClick={() => handleQuickDemo('admin')}
-              leftIcon={<ShieldAlert size={16} />}
-              disabled={isLoading}
-            >
-              Continue as Administrator
-            </Button>
+        {/* Cognito Callback Error Notification */}
+        {callbackError && (
+          <div
+            className="neo-card"
+            style={{
+              padding: '1.25rem',
+              backgroundColor: 'rgba(239, 68, 68, 0.1)',
+              border: '2.5px solid var(--accent-red)',
+              borderRadius: 'var(--radius-sm)',
+              marginBottom: '1.5rem',
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '0.75rem'
+            }}
+          >
+            <ShieldAlert size={22} color="var(--accent-red)" style={{ flexShrink: 0, marginTop: '2px' }} />
+            <div>
+              <div className="font-heading" style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--accent-red)', marginBottom: '0.25rem' }}>
+                Cognito Authentication Notice
+              </div>
+              <div style={{ fontSize: '0.875rem', color: 'var(--text-primary)', lineHeight: 1.4 }}>
+                {callbackError}
+              </div>
+            </div>
           </div>
+        )}
+
+        {/* Amazon Cognito SSO Button */}
+        <div style={{ marginBottom: '1.5rem' }}>
+          <Button
+            type="button"
+            variant="blue"
+            size="lg"
+            onClick={handleCognitoLogin}
+            style={{ width: '100%' }}
+            leftIcon={<ShieldAlert size={18} />}
+            disabled={isLoading}
+          >
+            Sign In with CampusFix SSO (Amazon Cognito)
+          </Button>
+          {!isCognitoConfigured && (
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.4rem', textAlign: 'center' }}>
+              Cognito Hosted UI mode ready. Set User Pool & Client ID in <code>.env</code> to activate live cloud SSO.
+            </div>
+          )}
         </div>
 
         {/* Traditional Credentials Form */}

@@ -36,7 +36,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   title,
   subtitle
 }) => {
-  const { user, role, switchRole, logout } = useAuth();
+  const { user, role, switchRole, logout, authSource, isMockAuthEnabled } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { unreadCount, addToast } = useNotification();
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
@@ -286,63 +286,65 @@ export const Navbar: React.FC<NavbarProps> = ({
                     marginTop: '0.25rem'
                   }}
                 >
-                  ACTIVE ROLE: {role.toUpperCase()}
+                  ACTIVE ROLE: {role.toUpperCase()} {authSource !== 'none' && `• ${authSource.toUpperCase()}`}
                 </div>
               </div>
 
-              {/* Role Switcher Shortcuts */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                <span
-                  className="font-mono"
-                  style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}
-                >
-                  Switch Demo Account
-                </span>
+              {/* Role Switcher Shortcuts (Only when mock auth is enabled) */}
+              {isMockAuthEnabled && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                  <span
+                    className="font-mono"
+                    style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}
+                  >
+                    Switch Demo Account
+                  </span>
 
-                <button
-                  type="button"
-                  onClick={() => handleRoleSwitch('student')}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    padding: '0.45rem 0.6rem',
-                    fontSize: '0.8rem',
-                    borderRadius: '4px',
-                    border: '1px solid var(--border-subtle)',
-                    backgroundColor:
-                      role === 'student' ? 'var(--accent-lime)' : 'var(--bg-surface-secondary)',
-                    color: role === 'student' ? '#171717' : 'var(--text-primary)',
-                    fontWeight: role === 'student' ? 700 : 500,
-                    cursor: 'pointer'
-                  }}
-                >
-                  <GraduationCap size={14} />
-                  <span>Rohan Sharma (Student)</span>
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => handleRoleSwitch('student')}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      padding: '0.45rem 0.6rem',
+                      fontSize: '0.8rem',
+                      borderRadius: '4px',
+                      border: '1px solid var(--border-subtle)',
+                      backgroundColor:
+                        role === 'student' ? 'var(--accent-lime)' : 'var(--bg-surface-secondary)',
+                      color: role === 'student' ? '#171717' : 'var(--text-primary)',
+                      fontWeight: role === 'student' ? 700 : 500,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <GraduationCap size={14} />
+                    <span>Rohan Sharma (Student)</span>
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={() => handleRoleSwitch('admin')}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    padding: '0.45rem 0.6rem',
-                    fontSize: '0.8rem',
-                    borderRadius: '4px',
-                    border: '1px solid var(--border-subtle)',
-                    backgroundColor:
-                      role === 'admin' ? 'var(--accent-blue)' : 'var(--bg-surface-secondary)',
-                    color: role === 'admin' ? '#FFFFFF' : 'var(--text-primary)',
-                    fontWeight: role === 'admin' ? 700 : 500,
-                    cursor: 'pointer'
-                  }}
-                >
-                  <ShieldAlert size={14} />
-                  <span>Dr. Aris Thorne (Admin)</span>
-                </button>
-              </div>
+                  <button
+                    type="button"
+                    onClick={() => handleRoleSwitch('admin')}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      padding: '0.45rem 0.6rem',
+                      fontSize: '0.8rem',
+                      borderRadius: '4px',
+                      border: '1px solid var(--border-subtle)',
+                      backgroundColor:
+                        role === 'admin' ? 'var(--accent-blue)' : 'var(--bg-surface-secondary)',
+                      color: role === 'admin' ? '#FFFFFF' : 'var(--text-primary)',
+                      fontWeight: role === 'admin' ? 700 : 500,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <ShieldAlert size={14} />
+                    <span>Dr. Aris Thorne (Admin)</span>
+                  </button>
+                </div>
+              )}
 
               {/* Public Landing Link & Logout */}
               <div

@@ -32,6 +32,11 @@ export const App: React.FC = () => {
   const { isLoading } = useAuth();
 
   if (isLoading) {
+    const isHandlingCallback =
+      typeof window !== 'undefined' &&
+      (new URLSearchParams(window.location.search).has('code') ||
+        new URLSearchParams(window.location.search).has('error'));
+
     return (
       <div
         style={{
@@ -55,7 +60,9 @@ export const App: React.FC = () => {
             borderRadius: '6px'
           }}
         >
-          CAMPUSFIX INITIALIZING...
+          {isHandlingCallback
+            ? 'VERIFYING COGNITO IDENTITY & PKCE TOKENS...'
+            : 'CAMPUSFIX INITIALIZING...'}
         </div>
       </div>
     );

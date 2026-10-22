@@ -16,6 +16,10 @@ export interface IAuthService {
   getCurrentUser(): Promise<User | null>;
   switchDemoRole(role: UserRole): Promise<User>;
   getDemoUsers(): { student: User; admin: User };
+  loginWithCognito?(): Promise<void>;
+  handleCallback?(): Promise<User | null>;
+  isCognitoConfigured?(): boolean;
+  getIdToken?(): Promise<string | null>;
 }
 
 const AUTH_STORAGE_KEY = 'campusfix_mock_current_user_v1';
@@ -143,4 +147,104 @@ export class MockAuthAdapter implements IAuthService {
   }
 }
 
-export const authService = new MockAuthAdapter();
+import { CognitoAuthAdapter, CognitoConfig } from './cognitoAuthAdapter';
+
+export class CompositeAuthService implements IAuthService {
+  private mockAdapter: MockAuthAdapter;
+  private cognitoAdapter: CognitoAuthAdapter;
+  private mockAuthOverride?: boolean;
+
+  constructor(options?: { mockAuthEnabled?: boolean; customCognitoConfig?: Partial<CognitoConfig> }) {
+    this.mockAdapter = new MockAuthAdapter();
+    this.cognitoAdapter = new CognitoAuthAdapter(options?.customCognitoConfig);
+    this.mockAuthOverride = options?.mockAuthEnabled;
+  }
+
+  isMockAuthEnabled(): boolean {
+    if (this.mockAuthOverride !== undefined) {
+      return this.mockAuthOverride;
+    }
+    const raw = import.meta.env.VITE_ENABLE_MOCK_AUTH;
+    // Explicitly check for 'false' string or boolean
+    return raw !== 'false' && raw !== false;
+  }
+
+  isCognitoConfigured(): boolean {
+    return this.cognitoAdapter.isCognitoConfigured();
+  }
+
+  async loginWithCognito(): Promise<void> {
+    return this.cognitoAdapter.loginWithCognito();
+  }
+
+  async handleCallback(): Promise<User | null> {
+    return this.cognitoAdapter.handleCallback();
+  }
+
+  async login(email: string, password?: string): Promise<User> {
+    if (!this.isMockAuthEnabled()) {
+      throw new Error('College credential login is disabled. Please sign in with CampusFix SSO (Amazon Cognito).');
+    }
+    return this.mockAdapter.login(email, password);
+  }
+
+  async register(input: RegisterInput): Promise<User> {
+    if (!this.isMockAuthEnabled()) {
+      throw new Error('Local student registration is disabled in cloud authentication mode.');
+    }
+    return this.mockAdapter.register(input);
+  }
+
+  async logout(): Promise<void> {
+    await this.cognitoAdapter.logout();
+    await this.mockAdapter.logout();
+  }
+
+  async getCurrentUser(): Promise<User | null> {
+    // 1. Prioritize verified Cognito active session
+    if (this.cognitoAdapter.isCognitoConfigured()) {
+      const cognitoUser = await this.cognitoAdapter.getCurrentUser();
+      if (cognitoUser) return cognitoUser;
+    }
+
+    // 2. Only fall back to local mock session if mock auth is explicitly enabled
+    if (this.isMockAuthEnabled()) {
+      return this.mockAdapter.getCurrentUser();
+    }
+
+    // When mock auth is disabled and no Cognito session exists, return null
+    return null;
+  }
+
+  async getAuthSource(): Promise<'cognito' | 'mock' | 'none'> {
+    if (this.cognitoAdapter.isCognitoConfigured()) {
+      const cognitoUser = await this.cognitoAdapter.getCurrentUser();
+      if (cognitoUser) return 'cognito';
+    }
+    if (this.isMockAuthEnabled()) {
+      const mockUser = await this.mockAdapter.getCurrentUser();
+      if (mockUser) return 'mock';
+    }
+    return 'none';
+  }
+
+  async getIdToken(): Promise<string | null> {
+    if (this.cognitoAdapter.isCognitoConfigured()) {
+      return this.cognitoAdapter.getIdToken();
+    }
+    return null;
+  }
+
+  async switchDemoRole(role: UserRole): Promise<User> {
+    if (!this.isMockAuthEnabled()) {
+      throw new Error('Demo role switching is disabled because VITE_ENABLE_MOCK_AUTH is set to false.');
+    }
+    return this.mockAdapter.switchDemoRole(role);
+  }
+
+  getDemoUsers(): { student: User; admin: User } {
+    return this.mockAdapter.getDemoUsers();
+  }
+}
+
+export const authService = new CompositeAuthService();
