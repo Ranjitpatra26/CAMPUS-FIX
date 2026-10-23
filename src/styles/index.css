@@ -205,6 +205,8 @@ html, body {
   padding: 0.65rem 0.85rem;
   font-family: 'Inter', sans-serif;
   font-size: 0.95rem;
+  min-height: 42px;
+  box-sizing: border-box;
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
@@ -323,6 +325,162 @@ html, body {
   .neo-btn:hover,
   .neo-card-interactive:hover {
     transform: none !important;
+  }
+}
+
+/* ==================================================
+   RESPONSIVE UTILITIES & VIEWPORT FOUNDATIONS
+   ================================================== */
+
+/* Universal Display & Visibility Primitives */
+.hidden {
+  display: none !important;
+}
+
+.flex {
+  display: flex !important;
+}
+
+.block {
+  display: block !important;
+}
+
+.inline-flex {
+  display: inline-flex !important;
+}
+
+/* Sizing & Width Utilities */
+.w-full {
+  width: 100% !important;
+}
+
+.neo-btn-full {
+  width: 100% !important;
+  display: flex !important;
+}
+
+/* Fluid Container */
+.container-fluid {
+  width: 100%;
+  max-width: var(--content-max-width, 1380px);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--content-padding-x, 1rem);
+  padding-right: var(--content-padding-x, 1rem);
+  box-sizing: border-box;
+}
+
+/* Touch Targets & Safe Hit Areas */
+.touch-target {
+  min-width: var(--min-touch-target, 44px);
+  min-height: var(--min-touch-target, 44px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Small Breakpoint: 640px and above */
+@media (min-width: 640px) {
+  .sm\:flex {
+    display: flex !important;
+  }
+  .sm\:inline-flex {
+    display: inline-flex !important;
+  }
+  .sm\:block {
+    display: block !important;
+  }
+  .sm\:hidden {
+    display: none !important;
+  }
+}
+
+/* Medium Breakpoint: 768px and above (Tablet) */
+@media (min-width: 768px) {
+  .md\:flex {
+    display: flex !important;
+  }
+  .md\:inline-flex {
+    display: inline-flex !important;
+  }
+  .md\:block {
+    display: block !important;
+  }
+  .md\:hidden {
+    display: none !important;
+  }
+}
+
+/* Large Breakpoint: 1025px and above (Desktop) */
+@media (min-width: 1025px) {
+  .lg\:flex {
+    display: flex !important;
+  }
+  .lg\:inline-flex {
+    display: inline-flex !important;
+  }
+  .lg\:block {
+    display: block !important;
+  }
+  .lg\:hidden {
+    display: none !important;
+  }
+  .hide-desktop,
+  .hidden-desktop {
+    display: none !important;
+  }
+}
+
+/* Small Viewport Specifics (< 640px) */
+@media (max-width: 639px) {
+  .hide-mobile,
+  .hidden-mobile,
+  .hidden-sm {
+    display: none !important;
+  }
+  .flex-col-mobile,
+  .flex-col-sm {
+    flex-direction: column !important;
+  }
+  .w-full-mobile,
+  .w-full-sm {
+    width: 100% !important;
+  }
+  .items-stretch-mobile {
+    align-items: stretch !important;
+  }
+}
+
+/* Tablet & Mobile Combined (< 1025px) */
+@media (max-width: 1024px) {
+  .hide-tablet-down,
+  .hidden-tablet-down,
+  .hide-on-mobile {
+    display: none !important;
+  }
+}
+
+/* Mobile Form Inputs: prevent iOS Safari auto-zoom on focus by enforcing >= 16px */
+@media (max-width: 768px) {
+  .neo-input,
+  .neo-select,
+  .neo-textarea,
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Coarse Pointer Devices (Touchscreens): Ensure accessible touch hits */
+@media (pointer: coarse) {
+  .touch-target,
+  .touch-friendly {
+    min-width: var(--min-touch-target, 44px);
+    min-height: var(--min-touch-target, 44px);
   }
 }
 

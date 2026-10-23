@@ -77,6 +77,29 @@
   --sidebar-width-expanded: 260px;
   --sidebar-width-collapsed: 76px;
   --navbar-height: 64px;
+
+  /* Fluid Spacing & Content Padding */
+  --space-2xs: clamp(0.25rem, 1vw, 0.375rem);
+  --space-xs: clamp(0.375rem, 1.5vw, 0.5rem);
+  --space-sm: clamp(0.5rem, 2vw, 0.75rem);
+  --space-md: clamp(0.75rem, 2.5vw, 1rem);
+  --space-lg: clamp(1rem, 3vw, 1.5rem);
+  --space-xl: clamp(1.25rem, 4vw, 2rem);
+  --space-2xl: clamp(1.5rem, 5vw, 2.75rem);
+
+  /* Responsive Viewport & Shell Dimensions */
+  --content-padding-x: clamp(0.85rem, 3.5vw, 2rem);
+  --content-padding-y: clamp(1rem, 3vw, 2rem);
+  --content-max-width: 1380px;
+
+  /* Touch Targets & Safe Interactive Sizing */
+  --min-touch-target: 44px;
+  --touch-target-size: 44px;
+
+  /* Safe Minimum Dimensions for Flexible Layouts */
+  --grid-min-card: min(100%, 280px);
+  --grid-min-kpi: min(100%, 190px);
+  --drawer-width-mobile: min(280px, 85vw);
 }
 
 [data-theme="dark"] {

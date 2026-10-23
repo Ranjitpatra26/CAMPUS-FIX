@@ -54,12 +54,13 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           <input
             ref={ref}
             id={inputId}
+            {...props}
             className={`neo-input ${error ? 'neo-input-error' : ''} ${className}`}
             style={{
-              paddingLeft: leftIcon ? '2.5rem' : '0.85rem',
-              paddingRight: rightIcon ? '2.5rem' : '0.85rem'
+              ...props.style,
+              paddingLeft: leftIcon ? '2.5rem' : (props.style?.paddingLeft ?? '0.85rem'),
+              paddingRight: rightIcon ? '2.5rem' : (props.style?.paddingRight ?? '0.85rem')
             }}
-            {...props}
           />
 
           {rightIcon && (

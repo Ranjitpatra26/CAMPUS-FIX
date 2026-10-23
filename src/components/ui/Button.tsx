@@ -3,6 +3,7 @@ import React from 'react';
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'blue' | 'danger';
   size?: 'sm' | 'md' | 'lg';
+  fullWidth?: boolean;
   isLoading?: boolean;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
@@ -12,6 +13,7 @@ export const Button: React.FC<ButtonProps> = ({
   children,
   variant = 'primary',
   size = 'md',
+  fullWidth = false,
   isLoading = false,
   leftIcon,
   rightIcon,
@@ -32,9 +34,11 @@ export const Button: React.FC<ButtonProps> = ({
     lg: 'neo-btn-lg'
   }[size];
 
+  const fullWidthClass = fullWidth ? 'neo-btn-full' : '';
+
   return (
     <button
-      className={`neo-btn ${variantClass} ${sizeClass} ${className}`}
+      className={`neo-btn ${variantClass} ${sizeClass} ${fullWidthClass} ${className}`.trim().replace(/\s+/g, ' ')}
       disabled={disabled || isLoading}
       {...props}
     >
