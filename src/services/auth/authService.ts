@@ -170,6 +170,9 @@ export class CompositeAuthService implements IAuthService {
     if (this.mockAuthOverride !== undefined) {
       return this.mockAuthOverride;
     }
+    if (import.meta.env.PROD) {
+      return false;
+    }
     const raw = import.meta.env.VITE_ENABLE_MOCK_AUTH;
     // Explicitly check for 'false' string or boolean
     return raw !== 'false' && raw !== false;
@@ -263,7 +266,7 @@ export class CompositeAuthService implements IAuthService {
 
   async switchDemoRole(role: UserRole): Promise<User> {
     if (!this.isMockAuthEnabled()) {
-      throw new Error('Demo role switching is disabled because VITE_ENABLE_MOCK_AUTH is set to false.');
+      throw new Error('Demo role switching is disabled because VITE_ENABLE_MOCK_AUTH is set to false. Role is strictly determined by verified Cognito identity claims.');
     }
     return this.mockAdapter.switchDemoRole(role);
   }

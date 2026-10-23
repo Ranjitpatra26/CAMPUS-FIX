@@ -5,7 +5,7 @@ import { ComplaintTable } from '../../components/complaints/ComplaintTable';
 import { StatusUpdateModal } from '../../components/complaints/StatusUpdateModal';
 import { AssignDepartmentModal } from '../../components/complaints/AssignDepartmentModal';
 import { Button } from '../../components/ui/Button';
-import { RotateCcw, AlertTriangle } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import { useNotification } from '../../context/NotificationContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -103,18 +103,7 @@ export const AllComplaintsPage: React.FC<AllComplaintsPageProps> = ({ onViewDeta
           </p>
         </div>
 
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={async () => {
-            await complaintRepository.resetToDefaults();
-            await loadData();
-            addToast('info', 'Reset Completed', 'Reset mock database to initial 16 tickets.');
-          }}
-          leftIcon={<RotateCcw size={15} />}
-        >
-          Reset Demo Data
-        </Button>
+
       </div>
 
       {error && (

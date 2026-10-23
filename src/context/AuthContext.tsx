@@ -153,6 +153,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const switchRole = async (targetRole: UserRole) => {
+    if (!authService.isMockAuthEnabled?.()) {
+      throw new Error('Role switching is disabled in production. Role is strictly determined by verified Cognito identity claims.');
+    }
     setIsLoading(true);
     try {
       const switchedUser = await authService.switchDemoRole(targetRole);

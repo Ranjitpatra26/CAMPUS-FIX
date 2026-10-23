@@ -132,7 +132,6 @@ export const RegisterPage: React.FC = () => {
           </p>
         </div>
 
-        {/* Demo Mode Notice */}
         <div
           style={{
             padding: '0.75rem 1rem',
@@ -150,7 +149,7 @@ export const RegisterPage: React.FC = () => {
         >
           <Info size={16} color="var(--accent-blue)" style={{ flexShrink: 0, marginTop: '2px' }} />
           <span>
-            <strong>Local Mock Mode:</strong> Registrations create verified <strong>Student accounts only</strong>. Administrator accounts are managed centrally by estate operations. Amazon Cognito cloud authentication will be connected in Phase 2.
+            Registrations create verified <strong>Student accounts</strong>. Administrator privileges are granted through institutional authorization groups.
           </span>
         </div>
 

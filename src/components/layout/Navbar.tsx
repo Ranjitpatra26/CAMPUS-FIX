@@ -9,10 +9,6 @@ import {
   Moon,
   Bell,
   PlusCircle,
-  ShieldAlert,
-  GraduationCap,
-  Sparkles,
-  ExternalLink,
   ChevronDown,
   Home
 } from 'lucide-react';
@@ -36,22 +32,11 @@ export const Navbar: React.FC<NavbarProps> = ({
   title,
   subtitle
 }) => {
-  const { user, role, switchRole, logout, authSource, isMockAuthEnabled } = useAuth();
+  const { user, role, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
-  const { unreadCount, addToast } = useNotification();
+  const { unreadCount } = useNotification();
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const navigate = useNavigate();
-
-  const handleRoleSwitch = (targetRole: 'student' | 'admin') => {
-    switchRole(targetRole);
-    setIsProfileMenuOpen(false);
-    addToast(
-      'info',
-      'Demo Role Changed',
-      `Switched to ${targetRole === 'admin' ? 'Dr. Aris Thorne (Chief Admin)' : 'Rohan Sharma (Student)'}.`
-    );
-    navigate(targetRole === 'admin' ? '/admin' : '/student');
-  };
 
   return (
     <header
@@ -113,26 +98,6 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Right Controls */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-        {/* Demo Mode Pill */}
-        <div
-          className="font-mono sm:flex"
-          style={{
-            display: 'none',
-            alignItems: 'center',
-            gap: '0.3rem',
-            fontSize: '0.725rem',
-            fontWeight: 800,
-            padding: '0.2rem 0.55rem',
-            backgroundColor: role === 'admin' ? 'var(--accent-blue-surface)' : 'var(--accent-lime)',
-            color: role === 'admin' ? 'var(--accent-blue)' : '#171717',
-            border: '1.5px solid var(--border-color)',
-            borderRadius: 'var(--radius-sm)',
-            boxShadow: '1.5px 1.5px 0px var(--border-color)'
-          }}
-        >
-          <Sparkles size={12} />
-          <span>DEMO: {role.toUpperCase()}</span>
-        </div>
 
         {/* Quick Action Button for Student */}
         {role === 'student' && (
@@ -286,65 +251,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                     marginTop: '0.25rem'
                   }}
                 >
-                  ACTIVE ROLE: {role.toUpperCase()} {authSource !== 'none' && `• ${authSource.toUpperCase()}`}
+                  ROLE: {role === 'admin' ? 'ADMINISTRATOR' : 'STUDENT'}
                 </div>
               </div>
-
-              {/* Role Switcher Shortcuts (Only when mock auth is enabled) */}
-              {isMockAuthEnabled && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                  <span
-                    className="font-mono"
-                    style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}
-                  >
-                    Switch Demo Account
-                  </span>
-
-                  <button
-                    type="button"
-                    onClick={() => handleRoleSwitch('student')}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem',
-                      padding: '0.45rem 0.6rem',
-                      fontSize: '0.8rem',
-                      borderRadius: '4px',
-                      border: '1px solid var(--border-subtle)',
-                      backgroundColor:
-                        role === 'student' ? 'var(--accent-lime)' : 'var(--bg-surface-secondary)',
-                      color: role === 'student' ? '#171717' : 'var(--text-primary)',
-                      fontWeight: role === 'student' ? 700 : 500,
-                      cursor: 'pointer'
-                    }}
-                  >
-                    <GraduationCap size={14} />
-                    <span>Rohan Sharma (Student)</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleRoleSwitch('admin')}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem',
-                      padding: '0.45rem 0.6rem',
-                      fontSize: '0.8rem',
-                      borderRadius: '4px',
-                      border: '1px solid var(--border-subtle)',
-                      backgroundColor:
-                        role === 'admin' ? 'var(--accent-blue)' : 'var(--bg-surface-secondary)',
-                      color: role === 'admin' ? '#FFFFFF' : 'var(--text-primary)',
-                      fontWeight: role === 'admin' ? 700 : 500,
-                      cursor: 'pointer'
-                    }}
-                  >
-                    <ShieldAlert size={14} />
-                    <span>Dr. Aris Thorne (Admin)</span>
-                  </button>
-                </div>
-              )}
 
               {/* Public Landing Link & Logout */}
               <div

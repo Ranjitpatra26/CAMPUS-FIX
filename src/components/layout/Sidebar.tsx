@@ -11,13 +11,10 @@ import {
   Building2,
   BarChart3,
   LogOut,
-  ShieldAlert,
-  GraduationCap,
   Bell,
   ChevronLeft,
   ChevronRight,
-  X,
-  Sparkles
+  X
 } from 'lucide-react';
 
 export type NavigationPage =
@@ -50,22 +47,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onCloseMobile,
   onOpenNotifications
 }) => {
-  const { user, role, switchRole, logout } = useAuth();
-  const { unreadCount, addToast } = useNotification();
+  const { user, role, logout } = useAuth();
+  const { unreadCount } = useNotification();
 
   const handleNavClick = (page: NavigationPage) => {
     onNavigate(page);
     if (onCloseMobile) onCloseMobile();
-  };
-
-  const handleRoleSwitch = (targetRole: 'student' | 'admin') => {
-    switchRole(targetRole);
-    addToast(
-      'info',
-      'Demo Role Changed',
-      `Switched to ${targetRole === 'admin' ? 'Dr. Aris Thorne (Chief Admin)' : 'Rohan Sharma (Student)'}.`
-    );
-    handleNavClick(targetRole === 'admin' ? 'admin-dashboard' : 'student-dashboard');
   };
 
   const studentNav = [
@@ -203,117 +190,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </button>
             )}
           </div>
-
-          {/* Demo Mode Notice & Quick Switcher */}
-          {!isCollapsed ? (
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '0.45rem',
-                backgroundColor: 'var(--bg-primary)',
-                padding: '0.5rem',
-                border: '1.5px solid var(--border-color)',
-                borderRadius: 'var(--radius-sm)'
-              }}
-            >
-              <div
-                className="font-mono"
-                style={{
-                  fontSize: '0.675rem',
-                  fontWeight: 800,
-                  color: 'var(--accent-lime-text)',
-                  backgroundColor: 'var(--accent-lime)',
-                  padding: '0.1rem 0.4rem',
-                  borderRadius: '2px',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.25rem',
-                  alignSelf: 'flex-start',
-                  border: '1px solid var(--border-color)'
-                }}
-              >
-                <Sparkles size={11} />
-                <span>DEMO MODE ACTIVE</span>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.35rem' }}>
-                <button
-                  type="button"
-                  onClick={() => handleRoleSwitch('student')}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.3rem',
-                    padding: '0.35rem 0.4rem',
-                    fontSize: '0.75rem',
-                    fontFamily: 'Space Grotesk, sans-serif',
-                    fontWeight: 700,
-                    border: '1.5px solid var(--border-color)',
-                    borderRadius: 'var(--radius-sm)',
-                    cursor: 'pointer',
-                    backgroundColor: role === 'student' ? 'var(--accent-lime)' : 'var(--bg-surface)',
-                    color: role === 'student' ? 'var(--accent-lime-text)' : 'var(--text-secondary)',
-                    boxShadow: role === 'student' ? '1.5px 1.5px 0px var(--border-color)' : 'none',
-                    transition: 'all 0.15s'
-                  }}
-                  title="Switch to Demo Student (Rohan Sharma)"
-                >
-                  <GraduationCap size={13} />
-                  <span>Student</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleRoleSwitch('admin')}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.3rem',
-                    padding: '0.35rem 0.4rem',
-                    fontSize: '0.75rem',
-                    fontFamily: 'Space Grotesk, sans-serif',
-                    fontWeight: 700,
-                    border: '1.5px solid var(--border-color)',
-                    borderRadius: 'var(--radius-sm)',
-                    cursor: 'pointer',
-                    backgroundColor: role === 'admin' ? 'var(--accent-blue)' : 'var(--bg-surface)',
-                    color: role === 'admin' ? '#FFFFFF' : 'var(--text-secondary)',
-                    boxShadow: role === 'admin' ? '1.5px 1.5px 0px var(--border-color)' : 'none',
-                    transition: 'all 0.15s'
-                  }}
-                  title="Switch to Demo Administrator (Dr. Aris Thorne)"
-                >
-                  <ShieldAlert size={13} />
-                  <span>Admin</span>
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.35rem' }}>
-              <button
-                onClick={() => handleRoleSwitch(role === 'student' ? 'admin' : 'student')}
-                style={{
-                  width: '38px',
-                  height: '38px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: role === 'student' ? 'var(--accent-lime)' : 'var(--accent-blue)',
-                  color: role === 'student' ? 'var(--accent-lime-text)' : '#FFFFFF',
-                  border: '1.5px solid var(--border-color)',
-                  borderRadius: 'var(--radius-sm)',
-                  boxShadow: '1.5px 1.5px 0px var(--border-color)',
-                  cursor: 'pointer'
-                }}
-                title={`Currently in ${role.toUpperCase()} demo mode. Click to toggle.`}
-              >
-                {role === 'student' ? <GraduationCap size={18} /> : <ShieldAlert size={18} />}
-              </button>
-            </div>
-          )}
         </div>
 
         {/* Navigation Items Scroll Area */}
@@ -603,7 +479,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     textOverflow: 'ellipsis'
                   }}
                 >
-                  {user?.name || 'Demo User'}
+                  {user?.name || 'CampusFix User'}
                 </div>
                 <div
                   className="font-mono"

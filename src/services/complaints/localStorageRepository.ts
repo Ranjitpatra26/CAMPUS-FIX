@@ -361,6 +361,9 @@ export class CompositeComplaintRepository implements IComplaintRepository {
     if (this.mockOverride !== undefined) {
       return this.mockOverride;
     }
+    if (import.meta.env.PROD) {
+      return false;
+    }
     const raw = import.meta.env.VITE_ENABLE_MOCK_AUTH;
     return raw !== 'false' && raw !== false;
   }

@@ -17,7 +17,7 @@ interface AppShellProps {
 const COLLAPSED_STORAGE_KEY = 'campusfix_sidebar_collapsed';
 
 export const AppShell: React.FC<AppShellProps> = ({ children, title, subtitle }) => {
-  const { user, role, switchRole } = useAuth();
+  const { user, role } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 

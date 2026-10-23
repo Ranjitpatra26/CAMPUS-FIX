@@ -10,10 +10,8 @@ import {
   EyeOff,
   ArrowRight,
   ArrowLeft,
-  GraduationCap,
   ShieldAlert,
   CheckCircle,
-  Sparkles,
   Home
 } from 'lucide-react';
 
@@ -23,19 +21,17 @@ export const LoginPage: React.FC = () => {
     role,
     isLoading: isAuthLoading,
     login,
-    switchRole,
     loginWithCognito,
     isCognitoConfigured,
-    isMockAuthEnabled,
     callbackError
   } = useAuth();
   const { addToast } = useNotification();
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState('rohan.sharma@campus.edu');
-  const [password, setPassword] = useState('campusfix123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(true);
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -77,22 +73,6 @@ export const LoginPage: React.FC = () => {
       navigate(loggedInUser.role === 'admin' ? '/admin' : '/student', { replace: true });
     } catch (err: any) {
       setError(err?.message || 'Login failed. Please verify credentials.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleQuickDemo = async (demoRole: 'student' | 'admin') => {
-    if (isPending) return;
-    setIsSubmitting(true);
-    try {
-      await switchRole(demoRole);
-      addToast(
-        'success',
-        'Demo Session Active',
-        `Logged in as ${demoRole === 'admin' ? 'Dr. Aris Thorne (Chief Admin)' : 'Rohan Sharma (Student)'}.`
-      );
-      navigate(demoRole === 'admin' ? '/admin' : '/student', { replace: true });
     } finally {
       setIsSubmitting(false);
     }
@@ -161,99 +141,7 @@ export const LoginPage: React.FC = () => {
           </p>
         </div>
 
-        {/* DEMO ACCESS SECTION (Only shown when mock auth is enabled) */}
-        {isMockAuthEnabled ? (
-          <div
-            className="neo-card"
-            style={{
-              padding: '1.25rem',
-              backgroundColor: 'var(--bg-surface-secondary)',
-              marginBottom: '1.75rem',
-              border: '2px solid var(--border-color)',
-              boxShadow: 'var(--shadow-offset)'
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                marginBottom: '0.75rem'
-              }}
-            >
-              <div
-                className="font-mono"
-                style={{
-                  fontSize: '0.75rem',
-                  fontWeight: 800,
-                  textTransform: 'uppercase',
-                  color: 'var(--text-primary)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.35rem'
-                }}
-              >
-                <Sparkles size={14} color="var(--accent-lime-text)" />
-                <span>TRY THE DEMO (INSTANT ACCESS)</span>
-              </div>
 
-              <span
-                className="neo-badge"
-                style={{ backgroundColor: 'var(--accent-lime)', color: '#171717', fontSize: '0.675rem' }}
-              >
-                NO PASSWORD REQUIRED
-              </span>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-              <Button
-                type="button"
-                variant="primary"
-                size="md"
-                onClick={() => handleQuickDemo('student')}
-                leftIcon={<GraduationCap size={16} />}
-                disabled={isPending}
-              >
-                Continue as Student
-              </Button>
-
-              <Button
-                type="button"
-                variant="blue"
-                size="md"
-                onClick={() => handleQuickDemo('admin')}
-                leftIcon={<ShieldAlert size={16} />}
-                disabled={isPending}
-              >
-                Continue as Administrator
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <div
-            className="neo-card"
-            style={{
-              padding: '0.85rem 1.15rem',
-              backgroundColor: 'var(--bg-surface-secondary)',
-              marginBottom: '1.5rem',
-              border: '2px solid var(--border-color)',
-              boxShadow: 'var(--shadow-offset)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between'
-            }}
-          >
-            <div className="font-mono" style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-              CLOUD SSO MODE ACTIVE (MOCK AUTH DISABLED)
-            </div>
-            <span
-              className="neo-badge"
-              style={{ backgroundColor: 'var(--accent-blue)', color: '#FFFFFF', fontSize: '0.675rem' }}
-            >
-              COGNITO SSO REQUIRED
-            </span>
-          </div>
-        )}
 
         {/* Cognito Callback Error Notification */}
         {callbackError && (

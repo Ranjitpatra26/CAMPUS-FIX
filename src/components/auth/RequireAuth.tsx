@@ -1,9 +1,8 @@
 import React from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { useNotification } from '../../context/NotificationContext';
 import { Button } from '../ui/Button';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { ShieldAlert, GraduationCap, ArrowRight, Lock, Home } from 'lucide-react';
+import { useNavigate, useLocation, Navigate } from 'react-router-dom';
+import { ShieldAlert } from 'lucide-react';
 import { UserRole } from '../../types';
 
 interface RequireAuthProps {
@@ -12,23 +11,12 @@ interface RequireAuthProps {
 }
 
 export const RequireAuth: React.FC<RequireAuthProps> = ({ children, requiredRole }) => {
-  const { user, role, switchRole } = useAuth();
-  const { addToast } = useNotification();
+  const { user, role, isLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleQuickDemo = async (targetRole: UserRole) => {
-    await switchRole(targetRole);
-    addToast(
-      'success',
-      'Demo Profile Active',
-      `Switched to ${targetRole === 'admin' ? 'Dr. Aris Thorne (Admin)' : 'Rohan Sharma (Student)'}.`
-    );
-    navigate(targetRole === 'admin' ? '/admin' : '/student');
-  };
-
-  // If unauthenticated
-  if (!user) {
+  // If still restoring session, display loading state
+  if (isLoading) {
     return (
       <div
         style={{
@@ -36,101 +24,32 @@ export const RequireAuth: React.FC<RequireAuthProps> = ({ children, requiredRole
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: '2rem 1.5rem',
           backgroundColor: 'var(--bg-primary)'
         }}
       >
         <div
           className="neo-card animate-fade-up"
           style={{
-            maxWidth: '540px',
-            width: '100%',
-            padding: '2.5rem 2rem',
+            padding: '2rem',
             textAlign: 'center',
-            backgroundColor: 'var(--bg-surface)',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '1.25rem'
+            backgroundColor: 'var(--bg-surface)'
           }}
         >
-          <div
-            style={{
-              width: '60px',
-              height: '60px',
-              backgroundColor: 'var(--accent-lime)',
-              border: '2.5px solid var(--border-color)',
-              borderRadius: 'var(--radius-md)',
-              boxShadow: 'var(--shadow-offset)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            <Lock size={28} color="#171717" />
-          </div>
-
-          <div
-            className="font-mono"
-            style={{
-              fontSize: '0.75rem',
-              fontWeight: 800,
-              backgroundColor: 'var(--accent-lime)',
-              color: '#171717',
-              padding: '0.15rem 0.5rem',
-              borderRadius: '2px',
-              border: '1.5px solid var(--border-color)'
-            }}
-          >
-            AUTHENTICATION REQUIRED
-          </div>
-
-          <h2 className="font-heading" style={{ fontSize: '1.75rem', fontWeight: 800 }}>
-            Sign In Or Select Demo Profile
-          </h2>
-
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: 1.5, margin: 0 }}>
-            You requested <code>{location.pathname}</code>. Choose an instant demo account or sign in with your college credentials.
-          </p>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', width: '100%', marginTop: '0.5rem' }}>
-            <Button
-              variant="primary"
-              size="md"
-              onClick={() => handleQuickDemo('student')}
-              leftIcon={<GraduationCap size={16} />}
-            >
-              Demo Student
-            </Button>
-
-            <Button
-              variant="blue"
-              size="md"
-              onClick={() => handleQuickDemo('admin')}
-              leftIcon={<ShieldAlert size={16} />}
-            >
-              Demo Admin
-            </Button>
-          </div>
-
-          <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
-            <Button variant="secondary" size="sm" onClick={() => navigate('/login')}>
-              Sign In Page
-            </Button>
-
-            <Button variant="secondary" size="sm" onClick={() => navigate('/')} leftIcon={<Home size={14} />}>
-              Landing Page
-            </Button>
+          <div className="font-mono" style={{ fontSize: '0.875rem', fontWeight: 700 }}>
+            Verifying authentication session...
           </div>
         </div>
       </div>
     );
   }
 
-  // If authenticated but role mismatch
-  if (requiredRole && role !== requiredRole) {
-    const isDemandingAdmin = requiredRole === 'admin';
+  // If unauthenticated, redirect directly to the real Cognito login flow
+  if (!user) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
 
+  // If authenticated but role mismatch, show clean 403 Access Denied
+  if (requiredRole && role !== requiredRole) {
     return (
       <div
         style={{
@@ -160,7 +79,7 @@ export const RequireAuth: React.FC<RequireAuthProps> = ({ children, requiredRole
             style={{
               width: '60px',
               height: '60px',
-              backgroundColor: 'var(--accent-orange)',
+              backgroundColor: 'var(--accent-red, #ef4444)',
               border: '2.5px solid var(--border-color)',
               borderRadius: 'var(--radius-md)',
               boxShadow: 'var(--shadow-offset)',
@@ -169,7 +88,7 @@ export const RequireAuth: React.FC<RequireAuthProps> = ({ children, requiredRole
               justifyContent: 'center'
             }}
           >
-            <ShieldAlert size={28} color="#171717" />
+            <ShieldAlert size={28} color="#FFFFFF" />
           </div>
 
           <div
@@ -177,41 +96,31 @@ export const RequireAuth: React.FC<RequireAuthProps> = ({ children, requiredRole
             style={{
               fontSize: '0.75rem',
               fontWeight: 800,
-              backgroundColor: 'var(--accent-orange)',
-              color: '#171717',
+              backgroundColor: 'var(--accent-red, #ef4444)',
+              color: '#FFFFFF',
               padding: '0.15rem 0.5rem',
               borderRadius: '2px',
               border: '1.5px solid var(--border-color)'
             }}
           >
-            {requiredRole.toUpperCase()} PRIVILEGES REQUIRED
+            ACCESS DENIED (403)
           </div>
 
           <h2 className="font-heading" style={{ fontSize: '1.75rem', fontWeight: 800 }}>
-            Role Authorization Notice
+            Insufficient Permissions
           </h2>
 
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: 1.5, margin: 0 }}>
-            You are currently signed in as <strong>{user.name}</strong> ({role.toUpperCase()}).
-            This section requires <strong>{requiredRole.toUpperCase()}</strong> permissions. In Demo Mode, you can switch accounts with 1 click:
+            You are authenticated as <strong>{user.name}</strong> ({role.toUpperCase()}).
+            This section requires verified <strong>{requiredRole.toUpperCase()}</strong> permissions in AWS Cognito.
           </p>
 
           <Button
-            variant={isDemandingAdmin ? 'blue' : 'primary'}
-            size="lg"
-            onClick={() => handleQuickDemo(requiredRole)}
-            rightIcon={<ArrowRight size={18} />}
-            style={{ width: '100%' }}
-          >
-            Switch to {isDemandingAdmin ? 'Administrator Demo (Dr. Aris Thorne)' : 'Student Demo (Rohan Sharma)'}
-          </Button>
-
-          <Button
-            variant="secondary"
-            size="sm"
+            variant="primary"
+            size="md"
             onClick={() => navigate(role === 'admin' ? '/admin' : '/student')}
           >
-            Return to My {role === 'admin' ? 'Operations' : 'Student'} Dashboard
+            Return to My Authorized Dashboard
           </Button>
         </div>
       </div>

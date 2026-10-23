@@ -339,7 +339,7 @@ export class CognitoAuthAdapter implements IAuthService {
       await this.loginWithCognito();
       throw new Error('Redirecting to Cognito Hosted Login...');
     }
-    throw new Error('Please sign in via Cognito Hosted UI or switch to Demo Mode.');
+    throw new Error('Cognito authentication is not configured. Please check your environment configuration.');
   }
 
   async register(input: RegisterInput): Promise<User> {
@@ -350,10 +350,8 @@ export class CognitoAuthAdapter implements IAuthService {
     throw new Error('Cognito self-registration must be performed through the Hosted UI.');
   }
 
-  async switchDemoRole(role: UserRole): Promise<User> {
-    const target = role === 'admin' ? DEMO_ADMIN : DEMO_STUDENT;
-    this.currentUser = target;
-    return target;
+  async switchDemoRole(_role: UserRole): Promise<User> {
+    throw new Error('Role switching is disabled. User role is strictly derived from verified Cognito identity tokens.');
   }
 
   getDemoUsers(): { student: User; admin: User } {

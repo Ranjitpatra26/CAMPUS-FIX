@@ -36,13 +36,12 @@ import {
 
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
-  const { user, role, switchRole } = useAuth();
+  const { user, role } = useAuth();
   const { theme, toggleTheme } = useTheme();
-  const { addToast } = useNotification();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [previewTab, setPreviewTab] = useState<'student' | 'admin'>('student');
-  const [demoStats] = useState({
+  const [campusStats] = useState({
     total: 16,
     resolved: 5,
     inProgress: 6,
@@ -51,14 +50,12 @@ export const LandingPage: React.FC = () => {
     avgSla: '4.2h'
   });
 
-  const handleLaunchDemo = async (targetRole: 'student' | 'admin') => {
-    await switchRole(targetRole);
-    addToast(
-      'success',
-      'Demo Mode Activated',
-      `Logged in as ${targetRole === 'admin' ? 'Dr. Aris Thorne (Chief Admin)' : 'Rohan Sharma (Student)'}.`
-    );
-    navigate(targetRole === 'admin' ? '/admin' : '/student');
+  const handlePortalNavigation = (targetRole: 'student' | 'admin') => {
+    if (user) {
+      navigate(user.role === 'admin' ? '/admin' : '/student');
+    } else {
+      navigate('/login');
+    }
   };
 
   const scrollToSection = (id: string) => {
@@ -122,7 +119,7 @@ export const LandingPage: React.FC = () => {
               onClick={() => scrollToSection('metrics')}
               style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer' }}
             >
-              Demo Metrics
+              Campus Metrics
             </button>
           </nav>
         </div>
@@ -162,11 +159,10 @@ export const LandingPage: React.FC = () => {
               <Button
                 variant="primary"
                 size="sm"
-                onClick={() => handleLaunchDemo('student')}
-                leftIcon={<Sparkles size={14} />}
+                onClick={() => navigate('/register')}
                 className="hidden sm:inline-flex"
               >
-                Try Demo
+                Register
               </Button>
             </>
           )}
@@ -228,15 +224,15 @@ export const LandingPage: React.FC = () => {
             onClick={() => scrollToSection('metrics')}
             style={{ padding: '0.5rem', textAlign: 'left', background: 'none', border: 'none', fontWeight: 700, fontSize: '1rem', color: 'var(--text-primary)' }}
           >
-            Demo Metrics
+            Campus Metrics
           </button>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem', paddingTop: '0.75rem', borderTop: '1.5px solid var(--border-subtle)' }}>
             <Button variant="secondary" onClick={() => { setMobileMenuOpen(false); navigate('/login'); }}>
               Sign In
             </Button>
-            <Button variant="primary" onClick={() => handleLaunchDemo('student')}>
-              Student Demo
+            <Button variant="primary" onClick={() => { setMobileMenuOpen(false); handlePortalNavigation('student'); }}>
+              Student Portal
             </Button>
           </div>
         </div>
@@ -332,19 +328,19 @@ export const LandingPage: React.FC = () => {
               <Button
                 variant="primary"
                 size="lg"
-                onClick={() => handleLaunchDemo('student')}
+                onClick={() => handlePortalNavigation('student')}
                 rightIcon={<ArrowRight size={18} />}
               >
-                Explore Student Demo
+                Student Portal
               </Button>
 
               <Button
                 variant="blue"
                 size="lg"
-                onClick={() => handleLaunchDemo('admin')}
+                onClick={() => handlePortalNavigation('admin')}
                 leftIcon={<ShieldAlert size={18} />}
               >
-                Explore Admin Demo
+                Admin Operations
               </Button>
 
               <Button
@@ -876,11 +872,11 @@ export const LandingPage: React.FC = () => {
                       Your Campus, Your Voice.
                     </h3>
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                      Viewing mock dashboard for Rohan Sharma (CS-2023-042)
+                      Student ticket management and resolution tracking view
                     </p>
                   </div>
-                  <Button variant="primary" size="sm" onClick={() => handleLaunchDemo('student')}>
-                    Open Live Student Dashboard
+                  <Button variant="primary" size="sm" onClick={() => handlePortalNavigation('student')}>
+                    Open Student Portal
                   </Button>
                 </div>
 
@@ -915,11 +911,11 @@ export const LandingPage: React.FC = () => {
                       Campus Operations Console
                     </h3>
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                      Viewing administrative triage for Dr. Aris Thorne (Chief Admin)
+                      Central campus administrative operations and ticket triage
                     </p>
                   </div>
-                  <Button variant="blue" size="sm" onClick={() => handleLaunchDemo('admin')}>
-                    Open Live Admin Console
+                  <Button variant="blue" size="sm" onClick={() => handlePortalNavigation('admin')}>
+                    Open Admin Console
                   </Button>
                 </div>
 
@@ -952,7 +948,7 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* ==================================================
-          SECTION 5: DEMO METRICS (FROM REAL MOCK DATASET)
+          SECTION 5: CAMPUS METRICS
           ================================================== */}
       <section id="metrics" style={{ padding: '5rem 2rem', maxWidth: '1240px', margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
         <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
@@ -969,13 +965,13 @@ export const LandingPage: React.FC = () => {
               display: 'inline-block'
             }}
           >
-            DEMO METRICS — REAL-TIME DERIVED FROM SAMPLE REPOSITORY
+            CAMPUS METRICS — RESOLUTION BENCHMARKS
           </span>
           <h2 className="font-heading" style={{ fontSize: '2.5rem', fontWeight: 900, marginTop: '0.75rem' }}>
-            Verified Demonstration Figures
+            Auditable Campus Figures
           </h2>
           <p style={{ fontSize: '0.95rem', color: 'var(--text-muted)' }}>
-            Accurate metrics computed directly from the local browser mock database.
+            Operational metrics for ticket resolution, departmental response, and SLA compliance.
           </p>
         </div>
 
@@ -988,19 +984,19 @@ export const LandingPage: React.FC = () => {
         >
           <div className="neo-card" style={{ padding: '1.75rem', textAlign: 'center', borderTop: '6px solid var(--accent-blue)' }}>
             <div className="font-heading" style={{ fontSize: '3rem', fontWeight: 900, color: 'var(--text-primary)', lineHeight: 1 }}>
-              {demoStats.total}
+              {campusStats.total}
             </div>
             <div className="font-heading" style={{ fontSize: '1rem', fontWeight: 800, marginTop: '0.5rem' }}>
-              Sample Complaints
+              Complaints Tracked
             </div>
             <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-              Pre-seeded multi-category data
+              Multi-category audit trail
             </div>
           </div>
 
           <div className="neo-card" style={{ padding: '1.75rem', textAlign: 'center', borderTop: '6px solid var(--accent-lime)' }}>
             <div className="font-heading" style={{ fontSize: '3rem', fontWeight: 900, color: 'var(--text-primary)', lineHeight: 1 }}>
-              {demoStats.resolved}
+              {campusStats.resolved}
             </div>
             <div className="font-heading" style={{ fontSize: '1rem', fontWeight: 800, marginTop: '0.5rem' }}>
               Resolved Issues
@@ -1012,7 +1008,7 @@ export const LandingPage: React.FC = () => {
 
           <div className="neo-card" style={{ padding: '1.75rem', textAlign: 'center', borderTop: '6px solid var(--accent-orange)' }}>
             <div className="font-heading" style={{ fontSize: '3rem', fontWeight: 900, color: 'var(--text-primary)', lineHeight: 1 }}>
-              {demoStats.departments}
+              {campusStats.departments}
             </div>
             <div className="font-heading" style={{ fontSize: '1rem', fontWeight: 800, marginTop: '0.5rem' }}>
               Operational Units
@@ -1024,7 +1020,7 @@ export const LandingPage: React.FC = () => {
 
           <div className="neo-card" style={{ padding: '1.75rem', textAlign: 'center', borderTop: '6px solid var(--accent-red)' }}>
             <div className="font-heading" style={{ fontSize: '3rem', fontWeight: 900, color: 'var(--text-primary)', lineHeight: 1 }}>
-              {demoStats.avgSla}
+              {campusStats.avgSla}
             </div>
             <div className="font-heading" style={{ fontSize: '1rem', fontWeight: 800, marginTop: '0.5rem' }}>
               Average Triage SLA
@@ -1073,26 +1069,26 @@ export const LandingPage: React.FC = () => {
           </h2>
 
           <p style={{ fontSize: '1.1rem', color: 'var(--text-secondary)', maxWidth: '580px', lineHeight: 1.6 }}>
-            Start exploring a more transparent, accountable way to manage campus complaints. No setup required — click below to enter the interactive demo.
+            A transparent, accountable platform to submit campus complaints, monitor real-time triage, and verify resolutions.
           </p>
 
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'center' }}>
             <Button
               variant="primary"
               size="lg"
-              onClick={() => handleLaunchDemo('student')}
+              onClick={() => handlePortalNavigation('student')}
               leftIcon={<GraduationCap size={20} />}
             >
-              Explore Student Demo
+              Access Student Portal
             </Button>
 
             <Button
               variant="blue"
               size="lg"
-              onClick={() => handleLaunchDemo('admin')}
+              onClick={() => handlePortalNavigation('admin')}
               leftIcon={<ShieldAlert size={20} />}
             >
-              Explore Admin Demo
+              Access Admin Operations
             </Button>
           </div>
         </div>
@@ -1147,16 +1143,16 @@ export const LandingPage: React.FC = () => {
             </button>
           </div>
 
-          {/* Demo Links */}
+          {/* Portal Access Links */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
             <span className="font-heading" style={{ fontWeight: 800, fontSize: '0.95rem' }}>
-              DEMO ACCESS
+              PORTAL ACCESS
             </span>
-            <button onClick={() => handleLaunchDemo('student')} style={{ background: 'none', border: 'none', textAlign: 'left', color: 'var(--accent-blue)', fontWeight: 600, fontSize: '0.875rem', cursor: 'pointer' }}>
-              Student Portal (Rohan Sharma)
+            <button onClick={() => handlePortalNavigation('student')} style={{ background: 'none', border: 'none', textAlign: 'left', color: 'var(--accent-blue)', fontWeight: 600, fontSize: '0.875rem', cursor: 'pointer' }}>
+              Student Portal
             </button>
-            <button onClick={() => handleLaunchDemo('admin')} style={{ background: 'none', border: 'none', textAlign: 'left', color: 'var(--accent-blue)', fontWeight: 600, fontSize: '0.875rem', cursor: 'pointer' }}>
-              Admin Console (Dr. Aris Thorne)
+            <button onClick={() => handlePortalNavigation('admin')} style={{ background: 'none', border: 'none', textAlign: 'left', color: 'var(--accent-blue)', fontWeight: 600, fontSize: '0.875rem', cursor: 'pointer' }}>
+              Admin Operations
             </button>
             <button onClick={() => navigate('/login')} style={{ background: 'none', border: 'none', textAlign: 'left', color: 'var(--text-secondary)', fontSize: '0.875rem', cursor: 'pointer' }}>
               Login Screen
