@@ -4,6 +4,7 @@ import { Button } from '../ui/Button';
 import { useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { ShieldAlert } from 'lucide-react';
 import { UserRole } from '../../types';
+import { getUserDisplayName } from '../../utils/userProfile';
 
 interface RequireAuthProps {
   children: React.ReactNode;
@@ -111,7 +112,7 @@ export const RequireAuth: React.FC<RequireAuthProps> = ({ children, requiredRole
           </h2>
 
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: 1.5, margin: 0 }}>
-            You are authenticated as <strong>{user.name}</strong> ({role.toUpperCase()}).
+            You are authenticated as <strong>{getUserDisplayName(user, role)}</strong> ({role.toUpperCase()}).
             This section requires verified <strong>{requiredRole.toUpperCase()}</strong> permissions in AWS Cognito.
           </p>
 

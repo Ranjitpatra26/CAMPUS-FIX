@@ -13,7 +13,6 @@ import {
   RefreshCw,
   CheckCircle2,
   AlertTriangle,
-  RotateCcw,
   Download
 } from 'lucide-react';
 import { useNotification } from '../../context/NotificationContext';
@@ -69,12 +68,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   const handleComplaintUpdated = (updated: Complaint) => {
     setComplaints(prev => prev.map(item => (item.id === updated.id ? updated : item)));
-  };
-
-  const handleResetData = async () => {
-    await complaintRepository.resetToDefaults();
-    await loadData();
-    addToast('info', 'Data Restored', 'Restored default 16 mock complaints with pristine histories.');
   };
 
   // Derive real KPI stats
@@ -147,16 +140,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           </div>
 
           <div style={{ display: 'flex', gap: '0.65rem' }}>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={handleResetData}
-              leftIcon={<RotateCcw size={15} />}
-              title="Reset mock data to initial 16 tickets"
-            >
-              Reset Data
-            </Button>
-
             <Button
               variant="primary"
               size="sm"

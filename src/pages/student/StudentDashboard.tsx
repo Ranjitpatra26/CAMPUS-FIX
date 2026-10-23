@@ -15,6 +15,7 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import { NavigationPage } from '../../components/layout/Sidebar';
+import { getUserDisplayName, isUuidString } from '../../utils/userProfile';
 
 interface StudentDashboardProps {
   onNavigate?: (page: NavigationPage) => void;
@@ -25,7 +26,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   onNavigate,
   onViewDetails
 }) => {
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const navigate = useNavigate();
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -107,7 +108,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                 marginBottom: '0.25rem'
               }}
             >
-              Welcome back, {user?.name} ({user?.studentId || 'STUDENT'})
+              Welcome back, {getUserDisplayName(user, role)} ({user?.studentId && !isUuidString(user.studentId) ? user.studentId : 'STUDENT'})
             </div>
             <h1
               className="font-heading"

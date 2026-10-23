@@ -3,6 +3,7 @@ import { User, UserRole } from '../../types';
 import { IAuthService, RegisterInput } from './authService';
 import { DEMO_STUDENT, DEMO_ADMIN } from '../mock-data/initialUsers';
 import { authLogger } from './authLogger';
+import { isUuidString } from '../../utils/userProfile';
 
 export interface CognitoConfig {
   region: string;
@@ -127,9 +128,31 @@ export class CognitoAuthAdapter implements IAuthService {
     const role: UserRole = groups.includes('Administrators') || groups.includes('admin') ? 'admin' : 'student';
 
     const email = (profile.email as string) || '';
-    const name = (profile.name as string) || (profile['cognito:username'] as string) || email.split('@')[0] || 'CampusFix User';
-    const studentId = (profile['custom:student_id'] as string) || (profile['studentId'] as string) || undefined;
-    const department = (profile['custom:department'] as string) || 'General';
+
+    // Determine reliable human-readable name without exposing Cognito UUIDs
+    const rawCandidate =
+      (profile.name as string) ||
+      [profile.given_name as string, profile.family_name as string].filter(Boolean).join(' ') ||
+      (profile.nickname as string) ||
+      (profile.preferred_username as string) ||
+      '';
+
+    let name: string;
+    if (
+      rawCandidate &&
+      rawCandidate.trim().length > 0 &&
+      !isUuidString(rawCandidate) &&
+      rawCandidate.trim().toLowerCase() !== profile.sub.toLowerCase()
+    ) {
+      name = rawCandidate.trim();
+    } else {
+      // Sensible role-based fallback when reliable name attribute is not provided
+      name = role === 'admin' ? 'Administrator' : 'Student';
+    }
+
+    const rawStudentId = (profile['custom:student_id'] as string) || (profile['studentId'] as string) || undefined;
+    const studentId = rawStudentId && !isUuidString(rawStudentId) ? rawStudentId : undefined;
+    const department = (profile['custom:department'] as string) || (role === 'admin' ? 'Campus Administration' : 'General Campus');
 
     return {
       id: profile.sub,

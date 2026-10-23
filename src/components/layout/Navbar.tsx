@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useNotification } from '../../context/NotificationContext';
@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { NavigationPage } from './Sidebar';
 import { useNavigate } from 'react-router-dom';
+import { getUserDisplayName, getUserInitials, getUserEmail } from '../../utils/userProfile';
 
 interface NavbarProps {
   isCollapsed?: boolean;
@@ -36,7 +37,26 @@ export const Navbar: React.FC<NavbarProps> = ({
   const { theme, toggleTheme } = useTheme();
   const { unreadCount } = useNotification();
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+
+  const displayName = getUserDisplayName(user, role);
+  const initials = getUserInitials(user, role);
+  const userEmail = getUserEmail(user);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
+        setIsProfileMenuOpen(false);
+      }
+    };
+    if (isProfileMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isProfileMenuOpen]);
 
   return (
     <header
@@ -167,7 +187,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         </button>
 
         {/* Profile Avatar & Dropdown Menu */}
-        <div style={{ position: 'relative' }}>
+        <div ref={profileMenuRef} style={{ position: 'relative' }}>
           <button
             onClick={() => setIsProfileMenuOpen(prev => !prev)}
             style={{
@@ -183,7 +203,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               cursor: 'pointer'
             }}
             aria-expanded={isProfileMenuOpen}
-            aria-label="User profile menu"
+            aria-label={`User profile menu for ${displayName}`}
+            title={`Logged in as ${displayName}`}
           >
             <div
               style={{
@@ -191,26 +212,21 @@ export const Navbar: React.FC<NavbarProps> = ({
                 height: '28px',
                 borderRadius: '3px',
                 overflow: 'hidden',
-                backgroundColor: 'var(--accent-lime)'
+                backgroundColor: role === 'admin' ? 'var(--accent-blue)' : 'var(--accent-lime)',
+                border: '1.5px solid var(--border-color)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 800,
+                fontSize: '0.75rem',
+                color: role === 'admin' ? '#FFFFFF' : '#171717',
+                flexShrink: 0
               }}
             >
               {user?.avatar ? (
-                <img src={user.avatar} alt={user.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <img src={user.avatar} alt={displayName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               ) : (
-                <div
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontWeight: 800,
-                    fontSize: '0.75rem',
-                    color: '#171717'
-                  }}
-                >
-                  {user?.name?.substring(0, 2).toUpperCase() || 'CP'}
-                </div>
+                <span>{initials}</span>
               )}
             </div>
             <ChevronDown size={14} color="var(--text-secondary)" />
@@ -224,34 +240,69 @@ export const Navbar: React.FC<NavbarProps> = ({
                 position: 'absolute',
                 right: 0,
                 top: 'calc(100% + 8px)',
-                width: '260px',
+                width: 'min(270px, calc(100vw - 2rem))',
                 padding: '0.85rem',
                 zIndex: 110,
                 backgroundColor: 'var(--bg-surface)',
-                boxShadow: 'var(--shadow-offset-lg)'
+                boxShadow: 'var(--shadow-offset-lg)',
+                boxSizing: 'border-box'
               }}
             >
               <div
                 style={{
                   paddingBottom: '0.65rem',
                   marginBottom: '0.65rem',
-                  borderBottom: '1.5px solid var(--border-subtle)'
+                  borderBottom: '1.5px solid var(--border-subtle)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.2rem'
                 }}
               >
-                <div style={{ fontWeight: 800, fontSize: '0.925rem', color: 'var(--text-primary)' }}>
-                  {user?.name}
-                </div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{user?.email}</div>
                 <div
-                  className="font-mono"
                   style={{
-                    fontSize: '0.7rem',
-                    color: 'var(--accent-blue)',
-                    fontWeight: 700,
-                    marginTop: '0.25rem'
+                    fontWeight: 800,
+                    fontSize: '0.925rem',
+                    color: 'var(--text-primary)',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
                   }}
+                  title={displayName}
                 >
-                  ROLE: {role === 'admin' ? 'ADMINISTRATOR' : 'STUDENT'}
+                  {displayName}
+                </div>
+                {userEmail && (
+                  <div
+                    style={{
+                      fontSize: '0.775rem',
+                      color: 'var(--text-muted)',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
+                    }}
+                    title={userEmail}
+                  >
+                    {userEmail}
+                  </div>
+                )}
+                <div style={{ marginTop: '0.35rem' }}>
+                  <span
+                    className="font-mono"
+                    style={{
+                      fontSize: '0.675rem',
+                      fontWeight: 800,
+                      backgroundColor: role === 'admin' ? 'var(--accent-blue)' : 'var(--accent-lime)',
+                      color: role === 'admin' ? '#FFFFFF' : 'var(--accent-lime-text)',
+                      border: '1px solid var(--border-color)',
+                      padding: '0.15rem 0.45rem',
+                      borderRadius: '3px',
+                      display: 'inline-block',
+                      letterSpacing: '0.04em',
+                      textTransform: 'uppercase'
+                    }}
+                  >
+                    {role === 'admin' ? 'Administrator' : 'Student'}
+                  </span>
                 </div>
               </div>
 

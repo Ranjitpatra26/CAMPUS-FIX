@@ -13,6 +13,7 @@ import {
   Lock,
   Cpu
 } from 'lucide-react';
+import { getUserDisplayName, getUserEmail, isUuidString } from '../../utils/userProfile';
 
 export const SettingsPage: React.FC = () => {
   const { user, role } = useAuth();
@@ -84,10 +85,10 @@ export const SettingsPage: React.FC = () => {
               Account Name
             </div>
             <div style={{ fontWeight: 700, fontSize: '1.05rem', marginTop: '0.25rem', color: 'var(--text-primary)' }}>
-              {user?.name || 'Verified User'}
+              {getUserDisplayName(user, role)}
             </div>
             <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
-              {user?.email || 'Authenticated User'}
+              {getUserEmail(user) || 'Authenticated User'}
             </div>
           </div>
 
@@ -134,7 +135,7 @@ export const SettingsPage: React.FC = () => {
               {user?.department || (role === 'admin' ? 'Campus Administration' : 'General Campus')}
             </div>
             <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
-              {user?.studentId ? `ID: ${user.studentId}` : 'Institutional Identity'}
+              {user?.studentId && !isUuidString(user.studentId) ? `ID: ${user.studentId}` : 'Institutional Identity'}
             </div>
           </div>
         </div>

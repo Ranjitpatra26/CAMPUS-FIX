@@ -16,6 +16,7 @@ import {
   ChevronRight,
   X
 } from 'lucide-react';
+import { getUserDisplayName, getUserInitials, isUuidString } from '../../utils/userProfile';
 
 export type NavigationPage =
   | 'student-dashboard'
@@ -49,6 +50,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const { user, role, logout } = useAuth();
   const { unreadCount } = useNotification();
+
+  const displayName = getUserDisplayName(user, role);
+  const initials = getUserInitials(user, role);
 
   const handleNavClick = (page: NavigationPage) => {
     onNavigate(page);
@@ -413,7 +417,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {isCollapsed ? (
             <button
               onClick={() => logout()}
-              title={`Logged in as ${user?.name || 'Guest'}. Click to sign out.`}
+              title={`Logged in as ${displayName}. Click to sign out.`}
               style={{
                 width: '38px',
                 height: '38px',
@@ -421,18 +425,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 border: '1.5px solid var(--border-color)',
                 overflow: 'hidden',
                 boxShadow: '1.5px 1.5px 0px var(--border-color)',
-                backgroundColor: 'var(--bg-surface)',
+                backgroundColor: role === 'admin' ? 'var(--accent-blue)' : 'var(--accent-lime)',
+                color: role === 'admin' ? '#FFFFFF' : '#171717',
                 cursor: 'pointer',
                 padding: 0,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
               }}
+              aria-label={`User profile for ${displayName}. Click to sign out.`}
             >
               {user?.avatar ? (
-                <img src={user.avatar} alt={user.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <img src={user.avatar} alt={displayName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               ) : (
-                <span style={{ fontWeight: 800, fontSize: '0.8rem' }}>{user?.name?.substring(0, 2).toUpperCase() || 'CP'}</span>
+                <span style={{ fontWeight: 800, fontSize: '0.8rem' }}>{initials}</span>
               )}
             </button>
           ) : (
@@ -445,26 +451,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   border: '1.5px solid var(--border-color)',
                   overflow: 'hidden',
                   flexShrink: 0,
-                  boxShadow: '1.5px 1.5px 0px var(--border-color)'
+                  boxShadow: '1.5px 1.5px 0px var(--border-color)',
+                  backgroundColor: role === 'admin' ? 'var(--accent-blue)' : 'var(--accent-lime)',
+                  color: role === 'admin' ? '#FFFFFF' : '#171717',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontWeight: 800,
+                  fontSize: '0.85rem'
                 }}
               >
                 {user?.avatar ? (
-                  <img src={user.avatar} alt={user.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <img src={user.avatar} alt={displayName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 ) : (
-                  <div
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      backgroundColor: 'var(--accent-lime)',
-                      color: '#171717',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontWeight: 800
-                    }}
-                  >
-                    {user?.name?.substring(0, 2).toUpperCase() || 'CP'}
-                  </div>
+                  <span>{initials}</span>
                 )}
               </div>
 
@@ -478,8 +478,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     overflow: 'hidden',
                     textOverflow: 'ellipsis'
                   }}
+                  title={displayName}
                 >
-                  {user?.name || 'CampusFix User'}
+                  {displayName}
                 </div>
                 <div
                   className="font-mono"
@@ -491,7 +492,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     textOverflow: 'ellipsis'
                   }}
                 >
-                  {user?.studentId || (role === 'admin' ? 'CHIEF ADMIN' : 'STUDENT')}
+                  {user?.studentId && !isUuidString(user.studentId)
+                    ? user.studentId
+                    : (role === 'admin' ? 'ADMINISTRATOR' : 'STUDENT')}
                 </div>
               </div>
 
