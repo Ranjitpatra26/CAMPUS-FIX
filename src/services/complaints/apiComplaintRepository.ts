@@ -59,6 +59,41 @@ export class ApiComplaintRepository implements IComplaintRepository {
     };
   }
 
+  private mapAnalyticsRecord(raw: any): Complaint {
+    return {
+      id: raw.complaintId || raw.id,
+      title: raw.title || 'Incident Report',
+      description: '', // Privacy: student description omitted from analytics
+      category: raw.category,
+      priority: raw.priority,
+      status: raw.status,
+      location: '', // Privacy: location omitted from analytics
+      department: raw.department,
+      studentId: '', // Privacy: student identifiers stripped
+      studentName: 'Anonymous Student',
+      studentEmail: '',
+      studentDepartment: '',
+      createdAt: raw.createdAt,
+      updatedAt: raw.resolvedAt || raw.createdAt,
+      resolvedAt: raw.resolvedAt || null,
+      assignedTo: raw.assignedTo,
+      statusHistory: Array.isArray(raw.statusHistory)
+        ? raw.statusHistory.map((h: any, idx: number) => ({
+            id: `hist-analytics-${idx}`,
+            previousStatus: null,
+            newStatus: h.newStatus,
+            timestamp: h.timestamp,
+            actor: {
+              id: '',
+              name: '',
+              role: 'admin'
+            },
+            remark: ''
+          }))
+        : []
+    };
+  }
+
   async createComplaint(input: CreateComplaintInput, student: User): Promise<Complaint> {
     if (!this.baseUrl) {
       throw new Error('Backend API URL is not configured (VITE_API_BASE_URL).');
@@ -109,44 +144,66 @@ export class ApiComplaintRepository implements IComplaintRepository {
 
     const baseUrl = this.getBaseUrl();
     const headers = await this.getAuthHeaders();
-    let response: Response;
-    try {
-      response = await fetch(`${baseUrl}/complaints/my`, {
-        method: 'GET',
-        headers
-      });
-    } catch (networkErr: any) {
-      throw new Error(`Failed to reach backend API: ${networkErr?.message || 'Network connection failed'}`);
-    }
+    const aggregated: Complaint[] = [];
+    let nextToken: string | undefined = undefined;
+    const visitedTokens = new Set<string>();
+    const MAX_PAGES = 50;
+    let pageCount = 0;
 
-    if (!response.ok) {
-      let errorMessage = `Server error (status ${response.status})`;
+    do {
+      pageCount++;
+      const url = `${baseUrl}/complaints/my?limit=100${nextToken ? `&nextToken=${encodeURIComponent(nextToken)}` : ''}`;
+
+      let response: Response;
       try {
-        const errorData = await response.json();
-        errorMessage = errorData?.message || errorData?.error || errorMessage;
-      } catch {
-        // Fallback
+        response = await fetch(url, {
+          method: 'GET',
+          headers
+        });
+      } catch (networkErr: any) {
+        throw new Error(`Failed to reach backend API: ${networkErr?.message || 'Network connection failed'}`);
       }
-      if (response.status === 403) {
-        throw new Error(`Access Denied (403 Forbidden): ${errorMessage}`);
-      }
-      if (response.status === 401) {
-        throw new Error(`Unauthorized (401): ${errorMessage}`);
-      }
-      throw new Error(`Failed to retrieve complaints from DynamoDB: ${errorMessage}`);
-    }
 
-    const data = await response.json();
-    const rawItems: any[] = Array.isArray(data)
-      ? data
-      : Array.isArray(data?.complaints)
-      ? data.complaints
-      : Array.isArray(data?.items)
-      ? data.items
-      : [];
+      if (!response.ok) {
+        let errorMessage = `Server error (status ${response.status})`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData?.message || errorData?.error || errorMessage;
+        } catch {
+          // Fallback
+        }
+        if (response.status === 403) {
+          throw new Error(`Access Denied (403 Forbidden): ${errorMessage}`);
+        }
+        if (response.status === 401) {
+          throw new Error(`Unauthorized (401): ${errorMessage}`);
+        }
+        throw new Error(`Failed to retrieve complaints from DynamoDB: ${errorMessage}`);
+      }
 
-    const complaints = rawItems.map(item => this.mapBackendComplaint(item));
-    return this.applyClientFilters(complaints, filters);
+      const data = await response.json();
+      const rawItems: any[] = Array.isArray(data)
+        ? data
+        : Array.isArray(data?.complaints)
+        ? data.complaints
+        : Array.isArray(data?.items)
+        ? data.items
+        : [];
+
+      for (const item of rawItems) {
+        aggregated.push(this.mapBackendComplaint(item));
+      }
+
+      const returnedToken: string | undefined = data?.nextToken;
+      if (returnedToken && !visitedTokens.has(returnedToken) && pageCount < MAX_PAGES) {
+        visitedTokens.add(returnedToken);
+        nextToken = returnedToken;
+      } else {
+        nextToken = undefined;
+      }
+    } while (nextToken);
+
+    return this.applyClientFilters(aggregated, filters);
   }
 
   async getAllComplaints(filters?: ComplaintFilterOptions): Promise<Complaint[]> {
@@ -156,44 +213,135 @@ export class ApiComplaintRepository implements IComplaintRepository {
 
     const baseUrl = this.getBaseUrl();
     const headers = await this.getAuthHeaders();
-    let response: Response;
-    try {
-      response = await fetch(`${baseUrl}/complaints/all`, {
-        method: 'GET',
-        headers
-      });
-    } catch (networkErr: any) {
-      throw new Error(`Failed to reach backend API: ${networkErr?.message || 'Network connection failed'}`);
-    }
+    const aggregated: Complaint[] = [];
+    let nextToken: string | undefined = undefined;
+    const visitedTokens = new Set<string>();
+    const MAX_PAGES = 50;
+    let pageCount = 0;
 
-    if (!response.ok) {
-      let errorMessage = `Server error (status ${response.status})`;
+    do {
+      pageCount++;
+      const url = `${baseUrl}/complaints/all?limit=100${nextToken ? `&nextToken=${encodeURIComponent(nextToken)}` : ''}`;
+
+      let response: Response;
       try {
-        const errorData = await response.json();
-        errorMessage = errorData?.message || errorData?.error || errorMessage;
-      } catch {
-        // Fallback
+        response = await fetch(url, {
+          method: 'GET',
+          headers
+        });
+      } catch (networkErr: any) {
+        throw new Error(`Failed to reach backend API: ${networkErr?.message || 'Network connection failed'}`);
       }
-      if (response.status === 403) {
-        throw new Error(`Access Denied (403 Forbidden): ${errorMessage}`);
+
+      if (!response.ok) {
+        let errorMessage = `Server error (status ${response.status})`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData?.message || errorData?.error || errorMessage;
+        } catch {
+          // Fallback
+        }
+        if (response.status === 403) {
+          throw new Error(`Access Denied (403 Forbidden): ${errorMessage}`);
+        }
+        if (response.status === 401) {
+          throw new Error(`Unauthorized (401): ${errorMessage}`);
+        }
+        throw new Error(`Failed to retrieve all complaints from DynamoDB: ${errorMessage}`);
       }
-      if (response.status === 401) {
-        throw new Error(`Unauthorized (401): ${errorMessage}`);
+
+      const data = await response.json();
+      const rawItems: any[] = Array.isArray(data)
+        ? data
+        : Array.isArray(data?.complaints)
+        ? data.complaints
+        : Array.isArray(data?.items)
+        ? data.items
+        : [];
+
+      for (const item of rawItems) {
+        aggregated.push(this.mapBackendComplaint(item));
       }
-      throw new Error(`Failed to retrieve all complaints from DynamoDB: ${errorMessage}`);
+
+      const returnedToken: string | undefined = data?.nextToken;
+      if (returnedToken && !visitedTokens.has(returnedToken) && pageCount < MAX_PAGES) {
+        visitedTokens.add(returnedToken);
+        nextToken = returnedToken;
+      } else {
+        nextToken = undefined;
+      }
+    } while (nextToken);
+
+    return this.applyClientFilters(aggregated, filters);
+  }
+
+  async getAnalyticsComplaints(filters?: ComplaintFilterOptions): Promise<Complaint[]> {
+    if (!this.baseUrl) {
+      throw new Error('Backend API URL is not configured (VITE_API_BASE_URL).');
     }
 
-    const data = await response.json();
-    const rawItems: any[] = Array.isArray(data)
-      ? data
-      : Array.isArray(data?.complaints)
-      ? data.complaints
-      : Array.isArray(data?.items)
-      ? data.items
-      : [];
+    const baseUrl = this.getBaseUrl();
+    const headers = await this.getAuthHeaders();
+    const aggregated: Complaint[] = [];
+    let nextToken: string | undefined = undefined;
+    const visitedTokens = new Set<string>();
+    const MAX_PAGES = 50;
+    let pageCount = 0;
 
-    const complaints = rawItems.map(item => this.mapBackendComplaint(item));
-    return this.applyClientFilters(complaints, filters);
+    do {
+      pageCount++;
+      const url = `${baseUrl}/admin/analytics/summary?limit=100${nextToken ? `&nextToken=${encodeURIComponent(nextToken)}` : ''}`;
+
+      let response: Response;
+      try {
+        response = await fetch(url, {
+          method: 'GET',
+          headers
+        });
+      } catch (networkErr: any) {
+        throw new Error(`Failed to reach backend API: ${networkErr?.message || 'Network connection failed'}`);
+      }
+
+      if (!response.ok) {
+        let errorMessage = `Server error (status ${response.status})`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData?.message || errorData?.error || errorMessage;
+        } catch {
+          // Fallback
+        }
+        if (response.status === 403) {
+          throw new Error(`Access Denied (403 Forbidden): ${errorMessage}`);
+        }
+        if (response.status === 401) {
+          throw new Error(`Unauthorized (401): ${errorMessage}`);
+        }
+        throw new Error(`Failed to retrieve analytics summary from DynamoDB: ${errorMessage}`);
+      }
+
+      const data = await response.json();
+      const rawItems: any[] = Array.isArray(data)
+        ? data
+        : Array.isArray(data?.items)
+        ? data.items
+        : Array.isArray(data?.complaints)
+        ? data.complaints
+        : [];
+
+      for (const item of rawItems) {
+        aggregated.push(this.mapAnalyticsRecord(item));
+      }
+
+      const returnedToken: string | undefined = data?.nextToken;
+      if (returnedToken && !visitedTokens.has(returnedToken) && pageCount < MAX_PAGES) {
+        visitedTokens.add(returnedToken);
+        nextToken = returnedToken;
+      } else {
+        nextToken = undefined;
+      }
+    } while (nextToken);
+
+    return this.applyClientFilters(aggregated, filters);
   }
 
   async getComplaintById(id: string): Promise<Complaint | null> {

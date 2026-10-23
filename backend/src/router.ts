@@ -115,7 +115,14 @@ export class AppRouter {
       // Route: GET /complaints/my
       if (rawPath === '/complaints/my' && method === 'GET') {
         const queryParams = event.queryStringParameters || {};
-        const limit = queryParams.limit ? parseInt(queryParams.limit, 10) : 50;
+        let limit = 50;
+        if (queryParams.limit !== undefined) {
+          const parsed = parseInt(queryParams.limit, 10);
+          if (isNaN(parsed) || parsed <= 0) {
+            throw new BadRequestError('Invalid limit parameter. Must be a positive integer.');
+          }
+          limit = Math.min(parsed, 100);
+        }
         const nextToken = queryParams.nextToken;
 
         const result = await this.db.getComplaintsByStudent(user.sub, limit, nextToken);
@@ -176,6 +183,35 @@ export class AppRouter {
         return createJsonResponse(201, newComplaint);
       }
 
+      // Route: GET /admin/analytics/summary (Admin Only)
+      if (rawPath === '/admin/analytics/summary' && method === 'GET') {
+        this.authService.requireAdmin(user);
+
+        const qp = event.queryStringParameters || {};
+        const filters: ComplaintFilterOptions = {
+          status: qp.status as any,
+          priority: qp.priority as any,
+          category: qp.category as any,
+          department: qp.department as any
+        };
+        let limit = 100;
+        if (qp.limit !== undefined) {
+          const parsed = parseInt(qp.limit, 10);
+          if (isNaN(parsed) || parsed <= 0) {
+            throw new BadRequestError('Invalid limit parameter. Must be a positive integer.');
+          }
+          limit = Math.min(parsed, 100);
+        }
+        const nextToken = qp.nextToken;
+
+        const result = await this.db.getAnalyticsRecords(limit, nextToken, filters);
+        return createJsonResponse(200, {
+          items: result.items,
+          complaints: result.items,
+          nextToken: result.nextToken
+        });
+      }
+
       // Route: GET /complaints/all (Admin Only)
       if (rawPath === '/complaints/all' && method === 'GET') {
         this.authService.requireAdmin(user);
@@ -187,7 +223,14 @@ export class AppRouter {
           category: qp.category as any,
           department: qp.department as any
         };
-        const limit = qp.limit ? parseInt(qp.limit, 10) : 50;
+        let limit = 50;
+        if (qp.limit !== undefined) {
+          const parsed = parseInt(qp.limit, 10);
+          if (isNaN(parsed) || parsed <= 0) {
+            throw new BadRequestError('Invalid limit parameter. Must be a positive integer.');
+          }
+          limit = Math.min(parsed, 100);
+        }
         const nextToken = qp.nextToken;
 
         const result = await this.db.getAllComplaints(filters, limit, nextToken);

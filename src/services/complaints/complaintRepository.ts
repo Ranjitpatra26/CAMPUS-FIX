@@ -19,6 +19,7 @@ export interface ComplaintStatistics {
 
 export interface IComplaintRepository {
   getAllComplaints(filters?: ComplaintFilterOptions): Promise<Complaint[]>;
+  getAnalyticsComplaints(filters?: ComplaintFilterOptions): Promise<Complaint[]>;
   getMyComplaints(studentId: string, filters?: ComplaintFilterOptions): Promise<Complaint[]>;
   getComplaintById(id: string): Promise<Complaint | null>;
   createComplaint(input: CreateComplaintInput, student: User): Promise<Complaint>;

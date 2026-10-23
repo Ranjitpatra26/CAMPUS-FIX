@@ -325,3 +325,76 @@ html, body {
     transform: none !important;
   }
 }
+
+/* ==================================================
+   PRINT & EXECUTIVE PDF REPORT STYLES
+   ================================================== */
+.print-only {
+  display: none !important;
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm 10mm;
+  }
+
+  html, body {
+    background-color: #FFFFFF !important;
+    background: #FFFFFF !important;
+    color: #171717 !important;
+    font-size: 10pt !important;
+  }
+
+  #root {
+    width: 100% !important;
+    max-width: 100% !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Hide interactive / non-printable UI */
+  header,
+  nav,
+  aside,
+  button,
+  .no-print,
+  .neo-btn,
+  [role="alert"] {
+    display: none !important;
+  }
+
+  /* Reveal dedicated print header & sections */
+  .print-only {
+    display: block !important;
+  }
+
+  /* Clean cards for paper / PDF */
+  .neo-card {
+    background-color: #FFFFFF !important;
+    background: #FFFFFF !important;
+    border: 1.5px solid #171717 !important;
+    box-shadow: none !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    margin-bottom: 12pt !important;
+    padding: 12pt !important;
+  }
+
+  /* Table readability in print */
+  table {
+    border: 1px solid #171717 !important;
+    font-size: 8.5pt !important;
+  }
+
+  th, td {
+    padding: 4pt 6pt !important;
+  }
+
+  /* SVG / Recharts visibility */
+  .recharts-responsive-container {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+}

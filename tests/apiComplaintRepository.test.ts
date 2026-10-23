@@ -151,7 +151,7 @@ describe('ApiComplaintRepository & DynamoDB Integration', () => {
     const complaints = await repo.getMyComplaints(dummyUser.id);
 
     expect(fetchSpy).toHaveBeenCalledWith(
-      `${testApiUrl}/complaints/my`,
+      `${testApiUrl}/complaints/my?limit=100`,
       expect.objectContaining({
         method: 'GET',
         headers: expect.objectContaining({
@@ -185,7 +185,7 @@ describe('ApiComplaintRepository & DynamoDB Integration', () => {
     const complaints = await repo.getAllComplaints();
 
     expect(fetchSpy).toHaveBeenCalledWith(
-      `${testApiUrl}/complaints/all`,
+      `${testApiUrl}/complaints/all?limit=100`,
       expect.objectContaining({
         method: 'GET',
         headers: expect.objectContaining({
@@ -278,14 +278,14 @@ describe('ApiComplaintRepository & DynamoDB Integration', () => {
     // Student ticket listing
     await repo.getMyComplaints('sub-student-123');
     expect(fetchSpy).toHaveBeenLastCalledWith(
-      `${testApiUrl}/complaints/my`,
+      `${testApiUrl}/complaints/my?limit=100`,
       expect.objectContaining({ method: 'GET' })
     );
 
     // Admin central repository listing
     await repo.getAllComplaints();
     expect(fetchSpy).toHaveBeenLastCalledWith(
-      `${testApiUrl}/complaints/all`,
+      `${testApiUrl}/complaints/all?limit=100`,
       expect.objectContaining({ method: 'GET' })
     );
   });
@@ -339,5 +339,186 @@ describe('ApiComplaintRepository & DynamoDB Integration', () => {
     await expect(repo.getComplaintById('CMP-CONFIDENTIAL-001')).rejects.toThrow(
       /Access Denied \(403 Forbidden\): You do not have permission to view another student's complaint/
     );
+  });
+
+  describe('Phase 3: Pagination & Dedicated Analytics Endpoint Integration', () => {
+    it('getAllComplaints retrieves all records across multiple pages using continuation tokens', async () => {
+      vi.spyOn(authService, 'getIdToken').mockResolvedValue('admin.jwt');
+
+      let callCount = 0;
+      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(async (url: any) => {
+        callCount++;
+        const urlStr = String(url);
+
+        if (callCount === 1) {
+          expect(urlStr).toContain('/complaints/all?limit=100');
+          expect(urlStr).not.toContain('nextToken');
+          return {
+            ok: true,
+            status: 200,
+            json: async () => ({
+              complaints: [
+                { complaintId: 'CMP-P1-01', title: 'Issue 1', status: 'Submitted', category: 'IT and Wi-Fi', priority: 'High', createdAt: '2026-10-23T10:00:00Z' },
+                { complaintId: 'CMP-P1-02', title: 'Issue 2', status: 'Assigned', category: 'Sanitation', priority: 'Medium', createdAt: '2026-10-23T10:05:00Z' }
+              ],
+              nextToken: 'token-for-page-2'
+            })
+          } as Response;
+        }
+
+        if (callCount === 2) {
+          expect(urlStr).toContain('nextToken=token-for-page-2');
+          return {
+            ok: true,
+            status: 200,
+            json: async () => ({
+              complaints: [
+                { complaintId: 'CMP-P2-03', title: 'Issue 3', status: 'Resolved', category: 'Electrical Maintenance', priority: 'Low', createdAt: '2026-10-23T10:10:00Z' }
+              ],
+              nextToken: undefined
+            })
+          } as Response;
+        }
+
+        throw new Error('Unexpected extra call');
+      });
+
+      const repo = new ApiComplaintRepository(testApiUrl);
+      const results = await repo.getAllComplaints();
+
+      expect(fetchSpy).toHaveBeenCalledTimes(2);
+      expect(results.length).toBe(3);
+      expect(results[0].id).toBe('CMP-P1-01');
+      expect(results[1].id).toBe('CMP-P1-02');
+      expect(results[2].id).toBe('CMP-P2-03');
+    });
+
+    it('getAllComplaints handles empty intermediate pages cleanly', async () => {
+      vi.spyOn(authService, 'getIdToken').mockResolvedValue('admin.jwt');
+
+      let callCount = 0;
+      vi.spyOn(globalThis, 'fetch').mockImplementation(async () => {
+        callCount++;
+        if (callCount === 1) {
+          return {
+            ok: true,
+            status: 200,
+            json: async () => ({
+              complaints: [], // Empty intermediate page from DynamoDB
+              nextToken: 'token-page-2'
+            })
+          } as Response;
+        }
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            complaints: [
+              { complaintId: 'CMP-PAGE-2', title: 'Found in page 2', status: 'Submitted', category: 'Other', priority: 'Low', createdAt: '2026-10-23T12:00:00Z' }
+            ],
+            nextToken: undefined
+          })
+        } as Response;
+      });
+
+      const repo = new ApiComplaintRepository(testApiUrl);
+      const results = await repo.getAllComplaints();
+
+      expect(results.length).toBe(1);
+      expect(results[0].id).toBe('CMP-PAGE-2');
+    });
+
+    it('getAllComplaints prevents infinite pagination loops on cyclic tokens', async () => {
+      vi.spyOn(authService, 'getIdToken').mockResolvedValue('admin.jwt');
+
+      let callCount = 0;
+      vi.spyOn(globalThis, 'fetch').mockImplementation(async () => {
+        callCount++;
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            complaints: [{ complaintId: `CMP-LOOP-${callCount}`, title: 'Loop item', status: 'Submitted', category: 'Other', priority: 'Low', createdAt: '2026-10-23T12:00:00Z' }],
+            nextToken: 'cyclic-token' // Always returns the same token
+          })
+        } as Response;
+      });
+
+      const repo = new ApiComplaintRepository(testApiUrl);
+      const results = await repo.getAllComplaints();
+
+      // First call saw 'cyclic-token', second call received 'cyclic-token' which is already visited -> terminates!
+      expect(callCount).toBe(2);
+      expect(results.length).toBe(2);
+    });
+
+    it('getAnalyticsComplaints queries /admin/analytics/summary and strips student PII', async () => {
+      vi.spyOn(authService, 'getIdToken').mockResolvedValue('admin.jwt');
+
+      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          items: [
+            {
+              complaintId: 'CMP-ANL-01',
+              title: 'Server Room Cooling Failure',
+              status: 'Resolved',
+              department: 'IT Services',
+              category: 'IT and Wi-Fi',
+              priority: 'Critical',
+              createdAt: '2026-10-20T08:00:00Z',
+              resolvedAt: '2026-10-20T10:30:00Z',
+              assignedTo: 'Vikram Mehta',
+              statusHistory: [
+                { newStatus: 'Assigned', timestamp: '2026-10-20T08:30:00Z' },
+                { newStatus: 'Resolved', timestamp: '2026-10-20T10:30:00Z' }
+              ]
+            }
+          ],
+          nextToken: undefined
+        })
+      } as Response);
+
+      const repo = new ApiComplaintRepository(testApiUrl);
+      const results = await repo.getAnalyticsComplaints();
+
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+      const [url] = fetchSpy.mock.calls[0];
+      expect(String(url)).toContain('/admin/analytics/summary?limit=100');
+
+      expect(results.length).toBe(1);
+      const rec = results[0];
+      expect(rec.id).toBe('CMP-ANL-01');
+      expect(rec.department).toBe('IT Services');
+      expect(rec.assignedTo).toBe('Vikram Mehta');
+      expect(rec.resolvedAt).toBe('2026-10-20T10:30:00Z');
+
+      // Privacy verification: student PII and description are omitted
+      expect(rec.studentEmail).toBe('');
+      expect(rec.studentId).toBe('');
+      expect(rec.studentName).toBe('Anonymous Student');
+      expect(rec.description).toBe('');
+      expect(rec.location).toBe('');
+    });
+
+    it('getAnalyticsComplaints surfaces 403 Forbidden when called by unauthorized student', async () => {
+      vi.spyOn(authService, 'getIdToken').mockResolvedValue('student.jwt');
+
+      vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+        ok: false,
+        status: 403,
+        json: async () => ({
+          error: 'ForbiddenError',
+          message: 'Administrator group membership required.',
+          statusCode: 403
+        })
+      } as Response);
+
+      const repo = new ApiComplaintRepository(testApiUrl);
+      await expect(repo.getAnalyticsComplaints()).rejects.toThrow(
+        /Access Denied \(403 Forbidden\): Administrator group membership required/
+      );
+    });
   });
 });

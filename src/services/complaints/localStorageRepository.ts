@@ -114,6 +114,11 @@ export class LocalStorageComplaintRepository implements IComplaintRepository {
     return this.applyFilters(list, filters);
   }
 
+  async getAnalyticsComplaints(filters?: ComplaintFilterOptions): Promise<Complaint[]> {
+    const list = this.loadComplaints();
+    return this.applyFilters(list, filters);
+  }
+
   async getMyComplaints(studentId: string, filters?: ComplaintFilterOptions): Promise<Complaint[]> {
     const list = this.loadComplaints().filter(c => c.studentId === studentId);
     return this.applyFilters(list, filters);
@@ -385,6 +390,10 @@ export class CompositeComplaintRepository implements IComplaintRepository {
 
   async getAllComplaints(filters?: ComplaintFilterOptions): Promise<Complaint[]> {
     return this.getActiveRepo().getAllComplaints(filters);
+  }
+
+  async getAnalyticsComplaints(filters?: ComplaintFilterOptions): Promise<Complaint[]> {
+    return this.getActiveRepo().getAnalyticsComplaints(filters);
   }
 
   async getMyComplaints(studentId: string, filters?: ComplaintFilterOptions): Promise<Complaint[]> {

@@ -25,10 +25,33 @@ export class InMemoryDynamoClient implements IDynamoDocClient {
 
       if (indexName === 'GSI_StudentQueue') {
         const studentId = command.input.ExpressionAttributeValues[':studentId'];
-        const matched = all
+        let matched = all
           .filter(c => c.studentId === studentId)
           .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        return { Items: matched };
+
+        const limit = command.input.Limit || matched.length;
+        const exclusiveStartKey = command.input.ExclusiveStartKey;
+
+        let startIndex = 0;
+        if (exclusiveStartKey?.complaintId) {
+          const foundIdx = matched.findIndex(c => c.complaintId === exclusiveStartKey.complaintId);
+          if (foundIdx !== -1) {
+            startIndex = foundIdx + 1;
+          }
+        }
+
+        const sliced = matched.slice(startIndex, startIndex + limit);
+        const hasMore = startIndex + limit < matched.length;
+        const lastItem = sliced[sliced.length - 1];
+
+        return {
+          Items: sliced,
+          LastEvaluatedKey: hasMore && lastItem ? {
+            studentId,
+            createdAt: lastItem.createdAt,
+            complaintId: lastItem.complaintId
+          } : undefined
+        };
       }
 
       if (indexName === 'GSI_AdminQueue') {
@@ -36,7 +59,6 @@ export class InMemoryDynamoClient implements IDynamoDocClient {
           (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
 
-        const filterExp = command.input.FilterExpression || '';
         const attrValues = command.input.ExpressionAttributeValues || {};
 
         if (attrValues[':status']) {
@@ -52,7 +74,29 @@ export class InMemoryDynamoClient implements IDynamoDocClient {
           matched = matched.filter(c => c.department === attrValues[':department']);
         }
 
-        return { Items: matched };
+        const limit = command.input.Limit || matched.length;
+        const exclusiveStartKey = command.input.ExclusiveStartKey;
+
+        let startIndex = 0;
+        if (exclusiveStartKey?.complaintId) {
+          const foundIdx = matched.findIndex(c => c.complaintId === exclusiveStartKey.complaintId);
+          if (foundIdx !== -1) {
+            startIndex = foundIdx + 1;
+          }
+        }
+
+        const sliced = matched.slice(startIndex, startIndex + limit);
+        const hasMore = startIndex + limit < matched.length;
+        const lastItem = sliced[sliced.length - 1];
+
+        return {
+          Items: sliced,
+          LastEvaluatedKey: hasMore && lastItem ? {
+            entityType: 'COMPLAINT',
+            createdAt: lastItem.createdAt,
+            complaintId: lastItem.complaintId
+          } : undefined
+        };
       }
 
       return { Items: all };

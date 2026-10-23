@@ -15,6 +15,7 @@ import {
 } from 'recharts';
 import { Complaint } from '../../../types';
 import { useTheme } from '../../../context/ThemeContext';
+import { calculateAnalyticsSummary } from '../../../utils/analytics';
 
 interface AnalyticsChartsProps {
   complaints: Complaint[];
@@ -32,29 +33,25 @@ export const AnalyticsCharts: React.FC<AnalyticsChartsProps> = ({ complaints }) 
     borderColor: isDark ? '#383D46' : '#171717'
   };
 
-  // 1. Data by Status
-  const statusCounts: Record<string, number> = {
-    Submitted: 0,
-    Assigned: 0,
-    'In Progress': 0,
-    Resolved: 0,
-    Rejected: 0
-  };
-  complaints.forEach(c => {
-    if (statusCounts[c.status] !== undefined) {
-      statusCounts[c.status]++;
-    }
-  });
+  const summary = calculateAnalyticsSummary(complaints);
 
+  // 1. Data by Status (real counts from pure calculation engine)
   const statusData = [
-    { name: 'Submitted', value: statusCounts.Submitted, color: '#3155E7' },
-    { name: 'Assigned', value: statusCounts.Assigned, color: '#FF9F43' },
-    { name: 'In Progress', value: statusCounts['In Progress'], color: '#7C3AED' },
-    { name: 'Resolved', value: statusCounts.Resolved, color: '#10B981' },
-    { name: 'Rejected', value: statusCounts.Rejected, color: '#F25F5C' }
+    { name: 'Submitted', value: summary.statusCounts.Submitted, color: '#3155E7' },
+    { name: 'Assigned', value: summary.statusCounts.Assigned, color: '#FF9F43' },
+    { name: 'In Progress', value: summary.statusCounts['In Progress'], color: '#7C3AED' },
+    { name: 'Resolved', value: summary.statusCounts.Resolved, color: '#10B981' },
+    { name: 'Rejected', value: summary.statusCounts.Rejected, color: '#F25F5C' }
   ];
 
-  // 2. Data by Category
+  // 2. Data by Department (including Unassigned)
+  const departmentData = summary.departmentDistribution.map(d => ({
+    department: d.department.length > 14 ? d.department.substring(0, 12) + '...' : d.department,
+    fullDepartment: d.department,
+    count: d.total
+  }));
+
+  // 3. Data by Category
   const categoryCounts: Record<string, number> = {};
   complaints.forEach(c => {
     categoryCounts[c.category] = (categoryCounts[c.category] || 0) + 1;
@@ -68,24 +65,40 @@ export const AnalyticsCharts: React.FC<AnalyticsChartsProps> = ({ complaints }) 
     }))
     .sort((a, b) => b.count - a.count);
 
-  // 3. Trends by Date (chronological)
-  const dateMap: Record<string, number> = {};
-  complaints.forEach(c => {
-    const d = new Date(c.createdAt).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric'
-    });
-    dateMap[d] = (dateMap[d] || 0) + 1;
-  });
+  // 4. Submission Trend (Monthly when spanning > 1 month, daily fallback when single month)
+  const isMultiMonth = summary.monthlyTrends.length > 1;
 
-  const trendData = Object.entries(dateMap).map(([date, count]) => ({
-    date,
-    count
-  }));
+  let trendData: { date: string; count: number }[] = [];
+  let trendTitle = 'Complaint Submission Trend';
+  let trendSubtitle = 'Daily ticket intake cadence';
+
+  if (isMultiMonth) {
+    trendTitle = 'Monthly Submission Trend';
+    trendSubtitle = 'Month-over-month incident trajectory';
+    trendData = summary.monthlyTrends.map(m => ({
+      date: m.label,
+      count: m.total
+    }));
+  } else {
+    const dateMap: Record<string, number> = {};
+    complaints.forEach(c => {
+      const d = new Date(c.createdAt).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric'
+      });
+      dateMap[d] = (dateMap[d] || 0) + 1;
+    });
+    trendData = Object.entries(dateMap).map(([date, count]) => ({
+      date,
+      count
+    }));
+  }
 
   // Custom Neo-Brutalist Tooltip
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
+      const item = payload[0].payload;
+      const title = item?.fullDepartment || item?.fullCategory || label || payload[0].name;
       return (
         <div
           style={{
@@ -98,7 +111,7 @@ export const AnalyticsCharts: React.FC<AnalyticsChartsProps> = ({ complaints }) 
           }}
         >
           <p style={{ fontWeight: 700, color: chartTheme.textColor, fontSize: '0.85rem' }}>
-            {label || payload[0].name}
+            {title}
           </p>
           <p style={{ color: payload[0].color || 'var(--accent-blue)', fontSize: '0.85rem' }}>
             Count: <strong>{payload[0].value}</strong> tickets
@@ -186,7 +199,65 @@ export const AnalyticsCharts: React.FC<AnalyticsChartsProps> = ({ complaints }) 
         </div>
       </div>
 
-      {/* Chart 2: Category Breakdown */}
+      {/* Chart 2: Department-Wise Distribution */}
+      <div className="neo-card" style={{ padding: '1.25rem' }}>
+        <h4
+          className="font-heading"
+          style={{
+            fontSize: '1.05rem',
+            marginBottom: '0.25rem',
+            color: 'var(--text-primary)'
+          }}
+        >
+          Complaints by Department
+        </h4>
+        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+          Workload allocation across campus operational units
+        </p>
+        <div style={{ width: '100%', height: '240px' }}>
+          {departmentData.length > 0 ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={departmentData} margin={{ top: 10, right: 10, left: -20, bottom: 25 }}>
+                <CartesianGrid stroke={chartTheme.gridColor} strokeDasharray="3 3" vertical={false} />
+                <XAxis
+                  dataKey="department"
+                  tick={{ fill: chartTheme.mutedColor, fontSize: 11 }}
+                  interval={0}
+                  angle={-25}
+                  textAnchor="end"
+                />
+                <YAxis
+                  tick={{ fill: chartTheme.mutedColor, fontSize: 11 }}
+                  allowDecimals={false}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Bar
+                  dataKey="count"
+                  fill="var(--accent-blue)"
+                  stroke="var(--border-color)"
+                  strokeWidth={1.5}
+                  radius={[4, 4, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div
+              style={{
+                height: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'var(--text-muted)',
+                fontSize: '0.9rem'
+              }}
+            >
+              No department data available
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Chart 3: Category Breakdown */}
       <div className="neo-card" style={{ padding: '1.25rem' }}>
         <h4
           className="font-heading"
@@ -202,34 +273,49 @@ export const AnalyticsCharts: React.FC<AnalyticsChartsProps> = ({ complaints }) 
           Incident volume across domains
         </p>
         <div style={{ width: '100%', height: '240px' }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={categoryData} margin={{ top: 10, right: 10, left: -20, bottom: 25 }}>
-              <CartesianGrid stroke={chartTheme.gridColor} strokeDasharray="3 3" vertical={false} />
-              <XAxis
-                dataKey="category"
-                tick={{ fill: chartTheme.mutedColor, fontSize: 11 }}
-                interval={0}
-                angle={-25}
-                textAnchor="end"
-              />
-              <YAxis
-                tick={{ fill: chartTheme.mutedColor, fontSize: 11 }}
-                allowDecimals={false}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Bar
-                dataKey="count"
-                fill="var(--accent-lime)"
-                stroke="var(--border-color)"
-                strokeWidth={1.5}
-                radius={[4, 4, 0, 0]}
-              />
-            </BarChart>
-          </ResponsiveContainer>
+          {categoryData.length > 0 ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={categoryData} margin={{ top: 10, right: 10, left: -20, bottom: 25 }}>
+                <CartesianGrid stroke={chartTheme.gridColor} strokeDasharray="3 3" vertical={false} />
+                <XAxis
+                  dataKey="category"
+                  tick={{ fill: chartTheme.mutedColor, fontSize: 11 }}
+                  interval={0}
+                  angle={-25}
+                  textAnchor="end"
+                />
+                <YAxis
+                  tick={{ fill: chartTheme.mutedColor, fontSize: 11 }}
+                  allowDecimals={false}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Bar
+                  dataKey="count"
+                  fill="var(--accent-lime)"
+                  stroke="var(--border-color)"
+                  strokeWidth={1.5}
+                  radius={[4, 4, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div
+              style={{
+                height: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'var(--text-muted)',
+                fontSize: '0.9rem'
+              }}
+            >
+              No category data available
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Chart 3: Submission Trend */}
+      {/* Chart 4: Submission Trend */}
       <div className="neo-card" style={{ padding: '1.25rem' }}>
         <h4
           className="font-heading"
@@ -239,33 +325,48 @@ export const AnalyticsCharts: React.FC<AnalyticsChartsProps> = ({ complaints }) 
             color: 'var(--text-primary)'
           }}
         >
-          Complaint Submission Trend
+          {trendTitle}
         </h4>
         <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
-          Daily ticket intake cadence
+          {trendSubtitle}
         </p>
         <div style={{ width: '100%', height: '240px' }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 20 }}>
-              <CartesianGrid stroke={chartTheme.gridColor} strokeDasharray="3 3" vertical={false} />
-              <XAxis
-                dataKey="date"
-                tick={{ fill: chartTheme.mutedColor, fontSize: 11 }}
-              />
-              <YAxis
-                tick={{ fill: chartTheme.mutedColor, fontSize: 11 }}
-                allowDecimals={false}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Area
-                type="monotone"
-                dataKey="count"
-                stroke="var(--accent-blue)"
-                strokeWidth={2.5}
-                fill="var(--accent-blue-surface)"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+          {trendData.length > 0 ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 20 }}>
+                <CartesianGrid stroke={chartTheme.gridColor} strokeDasharray="3 3" vertical={false} />
+                <XAxis
+                  dataKey="date"
+                  tick={{ fill: chartTheme.mutedColor, fontSize: 11 }}
+                />
+                <YAxis
+                  tick={{ fill: chartTheme.mutedColor, fontSize: 11 }}
+                  allowDecimals={false}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Area
+                  type="monotone"
+                  dataKey="count"
+                  stroke="var(--accent-orange)"
+                  strokeWidth={2.5}
+                  fill="var(--accent-orange-surface)"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          ) : (
+            <div
+              style={{
+                height: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'var(--text-muted)',
+                fontSize: '0.9rem'
+              }}
+            >
+              No trend data available
+            </div>
+          )}
         </div>
       </div>
     </div>

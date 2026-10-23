@@ -114,3 +114,22 @@ export interface AuthUser {
   groups: string[];
   isAdmin: boolean;
 }
+
+export interface AnalyticsHistoryEntry {
+  newStatus: ComplaintStatus;
+  timestamp: string;
+}
+
+export interface AnalyticsRecord {
+  complaintId: string;
+  title: string;
+  status: ComplaintStatus;
+  department?: DepartmentName;
+  category: ComplaintCategory;
+  priority: ComplaintPriority;
+  createdAt: string;
+  resolvedAt?: string | null;
+  assignedTo?: string;
+  statusHistory?: AnalyticsHistoryEntry[];
+}
+

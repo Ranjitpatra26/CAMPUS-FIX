@@ -758,4 +758,192 @@ describe('CampusFixBackendFunction End-to-End Endpoint & Security Tests', () => 
       );
     });
   });
+
+  describe('Phase 3: Dedicated Analytics Endpoint & Pagination Optimization', () => {
+    beforeEach(async () => {
+      // Seed 5 complaints with varying statuses and departments
+      for (let i = 1; i <= 5; i++) {
+        await router.dispatch(
+          createEvent({
+            method: 'POST',
+            path: '/complaints',
+            token: 'student_token_1',
+            body: {
+              title: `Campus Issue #${i} - Network / Power failure`,
+              description: `Detailed private student description #${i} regarding issue`,
+              location: `Building ${i}, Room 10${i}`,
+              category: i % 2 === 0 ? 'IT and Wi-Fi' : 'Electrical Maintenance',
+              priority: i === 1 ? 'Critical' : 'Medium',
+              department: i % 2 === 0 ? 'IT Services' : 'Electrical Works'
+            }
+          })
+        );
+      }
+    });
+
+    it('rejects unauthenticated requests to GET /admin/analytics/summary with 401', async () => {
+      const res = await router.dispatch(
+        createEvent({
+          method: 'GET',
+          path: '/admin/analytics/summary'
+        })
+      );
+      expect(res.statusCode).toBe(401);
+      const body = JSON.parse((res as any).body);
+      expect(body.error).toBe('UnauthorizedError');
+    });
+
+    it('rejects student callers with 403 Forbidden on GET /admin/analytics/summary', async () => {
+      const res = await router.dispatch(
+        createEvent({
+          method: 'GET',
+          path: '/admin/analytics/summary',
+          token: 'student_token_1'
+        })
+      );
+      expect(res.statusCode).toBe(403);
+      const body = JSON.parse((res as any).body);
+      expect(body.error).toBe('ForbiddenError');
+      expect(body.message).toContain('Administrator');
+    });
+
+    it('allows administrator and excludes student PII and description from response', async () => {
+      const res = await router.dispatch(
+        createEvent({
+          method: 'GET',
+          path: '/admin/analytics/summary',
+          token: 'admin_token'
+        })
+      );
+      expect(res.statusCode).toBe(200);
+      const body = JSON.parse((res as any).body);
+      expect(Array.isArray(body.items)).toBe(true);
+      expect(body.items.length).toBe(5);
+
+      // Verify privacy & security: student PII and description are strictly omitted
+      for (const item of body.items) {
+        expect(item.complaintId).toBeDefined();
+        expect(item.title).toBeDefined();
+        expect(item.status).toBeDefined();
+        expect(item.category).toBeDefined();
+        expect(item.priority).toBeDefined();
+        expect(item.createdAt).toBeDefined();
+
+        // STRICT PII EXCLUSIONS:
+        expect((item as any).studentEmail).toBeUndefined();
+        expect((item as any).studentId).toBeUndefined();
+        expect((item as any).studentName).toBeUndefined();
+        expect((item as any).studentDepartment).toBeUndefined();
+        expect((item as any).description).toBeUndefined();
+
+        // Status history must only contain newStatus & timestamp, stripping actor & remark
+        if (item.statusHistory && item.statusHistory.length > 0) {
+          for (const h of item.statusHistory) {
+            expect(h.newStatus).toBeDefined();
+            expect(h.timestamp).toBeDefined();
+            expect((h as any).actor).toBeUndefined();
+            expect((h as any).remark).toBeUndefined();
+          }
+        }
+      }
+
+      // Verify application response does not duplicate Access-Control-Allow-Origin
+      expect((res as any).headers['Access-Control-Allow-Origin']).toBeUndefined();
+    });
+
+    it('supports multi-page pagination across continuation tokens on GET /admin/analytics/summary', async () => {
+      // Page 1: limit = 2
+      const res1 = await router.dispatch(
+        createEvent({
+          method: 'GET',
+          path: '/admin/analytics/summary',
+          token: 'admin_token',
+          queryParams: { limit: '2' }
+        })
+      );
+      expect(res1.statusCode).toBe(200);
+      const body1 = JSON.parse((res1 as any).body);
+      expect(body1.items.length).toBe(2);
+      expect(body1.nextToken).toBeDefined();
+
+      // Page 2: limit = 2 with nextToken
+      const res2 = await router.dispatch(
+        createEvent({
+          method: 'GET',
+          path: '/admin/analytics/summary',
+          token: 'admin_token',
+          queryParams: { limit: '2', nextToken: body1.nextToken }
+        })
+      );
+      expect(res2.statusCode).toBe(200);
+      const body2 = JSON.parse((res2 as any).body);
+      expect(body2.items.length).toBe(2);
+      expect(body2.nextToken).toBeDefined();
+      expect(body2.items[0].complaintId).not.toBe(body1.items[0].complaintId);
+
+      // Page 3: limit = 2 with nextToken
+      const res3 = await router.dispatch(
+        createEvent({
+          method: 'GET',
+          path: '/admin/analytics/summary',
+          token: 'admin_token',
+          queryParams: { limit: '2', nextToken: body2.nextToken }
+        })
+      );
+      expect(res3.statusCode).toBe(200);
+      const body3 = JSON.parse((res3 as any).body);
+      expect(body3.items.length).toBe(1);
+      expect(body3.nextToken).toBeUndefined();
+
+      // Total items across pages = 5
+      const totalRetrieved = body1.items.length + body2.items.length + body3.items.length;
+      expect(totalRetrieved).toBe(5);
+    });
+
+    it('returns 400 Bad Request when malformed nextToken is supplied', async () => {
+      const res = await router.dispatch(
+        createEvent({
+          method: 'GET',
+          path: '/admin/analytics/summary',
+          token: 'admin_token',
+          queryParams: { nextToken: 'invalid-not-base64-json-token!!!' }
+        })
+      );
+      expect(res.statusCode).toBe(400);
+      const body = JSON.parse((res as any).body);
+      expect(body.error).toBe('BadRequestError');
+      expect(body.message).toContain('Invalid pagination token');
+    });
+
+    it('returns 400 Bad Request when invalid limit parameter is supplied', async () => {
+      const res = await router.dispatch(
+        createEvent({
+          method: 'GET',
+          path: '/admin/analytics/summary',
+          token: 'admin_token',
+          queryParams: { limit: '-10' }
+        })
+      );
+      expect(res.statusCode).toBe(400);
+      const body = JSON.parse((res as any).body);
+      expect(body.error).toBe('BadRequestError');
+      expect(body.message).toContain('positive integer');
+    });
+
+    it('handles empty datasets cleanly without errors', async () => {
+      mockClient.items.clear();
+      const res = await router.dispatch(
+        createEvent({
+          method: 'GET',
+          path: '/admin/analytics/summary',
+          token: 'admin_token'
+        })
+      );
+      expect(res.statusCode).toBe(200);
+      const body = JSON.parse((res as any).body);
+      expect(body.items).toEqual([]);
+      expect(body.nextToken).toBeUndefined();
+    });
+  });
 });
+

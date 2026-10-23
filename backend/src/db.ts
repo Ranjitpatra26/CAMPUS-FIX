@@ -11,10 +11,11 @@ import {
   ComplaintFilterOptions,
   ComplaintStatus,
   DepartmentName,
-  StatusHistoryEntry
+  StatusHistoryEntry,
+  AnalyticsRecord
 } from './types.js';
 import { BackendConfig, config as defaultConfig } from './config.js';
-import { NotFoundError } from './errors.js';
+import { NotFoundError, BadRequestError } from './errors.js';
 
 export interface IDynamoDocClient {
   send(command: any): Promise<any>;
@@ -44,12 +45,17 @@ export class DynamoDBComplaintRepository {
   }
 
   private decodeToken(token?: string): Record<string, any> | undefined {
-    if (!token) return undefined;
+    if (!token || token.trim() === '') return undefined;
     try {
       const json = Buffer.from(token, 'base64url').toString('utf8');
-      return JSON.parse(json);
-    } catch {
-      return undefined;
+      const parsed = JSON.parse(json);
+      if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+        throw new BadRequestError('Invalid pagination token (nextToken).');
+      }
+      return parsed;
+    } catch (err) {
+      if (err instanceof BadRequestError) throw err;
+      throw new BadRequestError('Invalid pagination token (nextToken). Malformed token.');
     }
   }
 
@@ -158,6 +164,91 @@ export class DynamoDBComplaintRepository {
 
     return {
       complaints: items,
+      nextToken: this.encodeToken(result.LastEvaluatedKey)
+    };
+  }
+
+  async getAnalyticsRecords(
+    limit: number = 100,
+    nextToken?: string,
+    filters?: ComplaintFilterOptions
+  ): Promise<{ items: AnalyticsRecord[]; nextToken?: string }> {
+    const filterExpressions: string[] = [];
+    const expressionAttributeValues: Record<string, any> = {
+      ':entityType': 'COMPLAINT'
+    };
+    const expressionAttributeNames: Record<string, string> = {
+      '#entityType': 'entityType',
+      '#complaintId': 'complaintId',
+      '#title': 'title',
+      '#status': 'status',
+      '#department': 'department',
+      '#category': 'category',
+      '#priority': 'priority',
+      '#createdAt': 'createdAt',
+      '#resolvedAt': 'resolvedAt',
+      '#assignedTo': 'assignedTo',
+      '#statusHistory': 'statusHistory'
+    };
+
+    if (filters?.status && filters.status !== 'All') {
+      filterExpressions.push('#status = :status');
+      expressionAttributeValues[':status'] = filters.status;
+    }
+
+    if (filters?.priority && filters.priority !== 'All') {
+      filterExpressions.push('#priority = :priority');
+      expressionAttributeValues[':priority'] = filters.priority;
+    }
+
+    if (filters?.category && filters.category !== 'All') {
+      filterExpressions.push('#category = :category');
+      expressionAttributeValues[':category'] = filters.category;
+    }
+
+    if (filters?.department && filters.department !== 'All') {
+      filterExpressions.push('#department = :department');
+      expressionAttributeValues[':department'] = filters.department;
+    }
+
+    const command = new QueryCommand({
+      TableName: this.tableName,
+      IndexName: 'GSI_AdminQueue',
+      KeyConditionExpression: '#entityType = :entityType',
+      FilterExpression: filterExpressions.length > 0 ? filterExpressions.join(' AND ') : undefined,
+      ProjectionExpression:
+        '#complaintId, #title, #status, #department, #category, #priority, #createdAt, #resolvedAt, #assignedTo, #statusHistory',
+      ExpressionAttributeNames: expressionAttributeNames,
+      ExpressionAttributeValues: expressionAttributeValues,
+      ScanIndexForward: false, // Newest first
+      Limit: Math.min(Math.max(limit, 1), 100),
+      ExclusiveStartKey: this.decodeToken(nextToken)
+    });
+
+    const result = await this.docClient.send(command);
+    const rawItems = (result.Items || []) as any[];
+
+    // Strip student personal identifiers and format strictly as AnalyticsRecord
+    const projected: AnalyticsRecord[] = rawItems.map(item => ({
+      complaintId: item.complaintId,
+      title: item.title,
+      status: item.status,
+      department: item.department || undefined,
+      category: item.category,
+      priority: item.priority,
+      createdAt: item.createdAt,
+      resolvedAt: item.resolvedAt || null,
+      assignedTo: item.assignedTo || undefined,
+      statusHistory: Array.isArray(item.statusHistory)
+        ? item.statusHistory.map((h: any) => ({
+            newStatus: h.newStatus,
+            timestamp: h.timestamp
+          }))
+        : []
+    }));
+
+    return {
+      items: projected,
       nextToken: this.encodeToken(result.LastEvaluatedKey)
     };
   }
