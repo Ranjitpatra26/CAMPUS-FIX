@@ -6,6 +6,12 @@ import { DynamoDBComplaintRepository } from '../src/db.js';
 import { BackendConfig } from '../src/config.js';
 import { INotificationService } from '../src/notifications.js';
 import { InMemoryDynamoClient } from './mockDynamo.js';
+import {
+  createJsonResponse,
+  createErrorResponse,
+  buildCorsHeaders,
+  BadRequestError
+} from '../src/errors.js';
 
 describe('CampusFixBackendFunction End-to-End Endpoint & Security Tests', () => {
   const testConfig: BackendConfig = {
@@ -14,7 +20,7 @@ describe('CampusFixBackendFunction End-to-End Endpoint & Security Tests', () => 
     cognitoUserPoolId: 'ap-southeast-2_tNhqL8tGi',
     cognitoClientId: '4oq0kq3qljmhdu8rmbjclt94sl',
     cognitoAdminGroup: 'Administrators',
-    allowedOrigin: 'http://localhost:5173',
+    allowedOrigin: 'http://localhost:5173, https://campus-fix-ten-iota.vercel.app',
     sesSourceEmail: 'notifications@campusfix.edu',
     adminNotificationEmail: 'admin@campusfix.edu',
     frontendBaseUrl: ''
@@ -77,9 +83,11 @@ describe('CampusFixBackendFunction End-to-End Endpoint & Security Tests', () => 
     token?: string;
     body?: any;
     queryParams?: Record<string, string>;
+    headers?: Record<string, string>;
   }): APIGatewayProxyEventV2 {
     const headers: Record<string, string> = {
-      'content-type': 'application/json'
+      'content-type': 'application/json',
+      ...(options.headers || {})
     };
     if (options.token) {
       headers['authorization'] = `Bearer ${options.token}`;
@@ -116,12 +124,120 @@ describe('CampusFixBackendFunction End-to-End Endpoint & Security Tests', () => 
   }
 
   it('handles CORS OPTIONS preflight request with 204 and correct CORS headers', async () => {
-    const event = createEvent({ method: 'OPTIONS', path: '/complaints' });
+    const event = createEvent({
+      method: 'OPTIONS',
+      path: '/complaints',
+      headers: { Origin: 'https://campus-fix-ten-iota.vercel.app' }
+    });
     const res = await router.dispatch(event);
 
     expect(res.statusCode).toBe(204);
-    expect((res as any).headers['Access-Control-Allow-Origin']).toBe('http://localhost:5173');
+    expect((res as any).headers['Access-Control-Allow-Origin']).toBe('https://campus-fix-ten-iota.vercel.app');
     expect((res as any).headers['Access-Control-Allow-Methods']).toContain('GET, POST, PATCH, OPTIONS');
+    expect((res as any).headers['Access-Control-Allow-Headers']).toContain('Authorization, Content-Type');
+  });
+
+  it('ensures application-level JSON responses do NOT emit Access-Control-Allow-Origin to prevent duplicate headers with AWS Function URL CORS', async () => {
+    // 1. Health check response
+    const healthEvent = createEvent({
+      method: 'GET',
+      path: '/health',
+      headers: { Origin: 'https://campus-fix-ten-iota.vercel.app' }
+    });
+    const healthRes = await router.dispatch(healthEvent);
+    expect(healthRes.statusCode).toBe(200);
+    expect((healthRes as any).headers['Content-Type']).toBe('application/json');
+    expect((healthRes as any).headers['Access-Control-Allow-Origin']).toBeUndefined();
+    expect((healthRes as any).headers['Access-Control-Allow-Methods']).toBeUndefined();
+
+    // 2. Authenticated GET /complaints/my
+    const myComplaintsEvent = createEvent({
+      method: 'GET',
+      path: '/complaints/my',
+      token: 'student_token_1',
+      headers: { Origin: 'https://campus-fix-ten-iota.vercel.app' }
+    });
+    const myRes = await router.dispatch(myComplaintsEvent);
+    expect(myRes.statusCode).toBe(200);
+    expect((myRes as any).headers['Content-Type']).toBe('application/json');
+    expect((myRes as any).headers['Access-Control-Allow-Origin']).toBeUndefined();
+
+    // 3. Authenticated POST /complaints
+    const postEvent = createEvent({
+      method: 'POST',
+      path: '/complaints',
+      token: 'student_token_1',
+      headers: { Origin: 'https://campus-fix-ten-iota.vercel.app' },
+      body: {
+        title: 'Projector broken in CS-101',
+        description: 'HDMI port is loose and no display is output.',
+        location: 'CS Department, Room 101',
+        category: 'Classroom Facilities',
+        priority: 'High'
+      }
+    });
+    const postRes = await router.dispatch(postEvent);
+    expect(postRes.statusCode).toBe(201);
+    expect((postRes as any).headers['Content-Type']).toBe('application/json');
+    expect((postRes as any).headers['Access-Control-Allow-Origin']).toBeUndefined();
+  });
+
+  it('ensures application-level error responses do NOT emit Access-Control-Allow-Origin', async () => {
+    // 1. 401 Unauthorized (missing token)
+    const unauthorizedEvent = createEvent({
+      method: 'GET',
+      path: '/complaints/my',
+      headers: { Origin: 'https://campus-fix-ten-iota.vercel.app' }
+    });
+    const unauthRes = await router.dispatch(unauthorizedEvent);
+    expect(unauthRes.statusCode).toBe(401);
+    expect((unauthRes as any).headers['Content-Type']).toBe('application/json');
+    expect((unauthRes as any).headers['Access-Control-Allow-Origin']).toBeUndefined();
+
+    // 2. 404 Not Found (invalid route with authenticated caller)
+    const notFoundEvent = createEvent({
+      method: 'GET',
+      path: '/non-existent-endpoint',
+      token: 'student_token_1',
+      headers: { Origin: 'https://campus-fix-ten-iota.vercel.app' }
+    });
+    const notFoundRes = await router.dispatch(notFoundEvent);
+    expect(notFoundRes.statusCode).toBe(404);
+    expect((notFoundRes as any).headers['Content-Type']).toBe('application/json');
+    expect((notFoundRes as any).headers['Access-Control-Allow-Origin']).toBeUndefined();
+
+    // 3. 400 Bad Request (invalid payload)
+    const badRequestEvent = createEvent({
+      method: 'POST',
+      path: '/complaints',
+      token: 'student_token_1',
+      headers: { Origin: 'https://campus-fix-ten-iota.vercel.app' },
+      body: { title: '' } // Missing description, category, etc.
+    });
+    const badRequestRes = await router.dispatch(badRequestEvent);
+    expect(badRequestRes.statusCode).toBe(400);
+    expect((badRequestRes as any).headers['Content-Type']).toBe('application/json');
+    expect((badRequestRes as any).headers['Access-Control-Allow-Origin']).toBeUndefined();
+  });
+
+  it('direct unit tests for createJsonResponse, createErrorResponse, and buildCorsHeaders', () => {
+    // createJsonResponse provides Content-Type: application/json without CORS headers
+    const jsonRes = createJsonResponse(200, { success: true });
+    expect(jsonRes.statusCode).toBe(200);
+    expect((jsonRes as any).headers['Content-Type']).toBe('application/json');
+    expect((jsonRes as any).headers['Access-Control-Allow-Origin']).toBeUndefined();
+
+    // createErrorResponse provides Content-Type: application/json without CORS headers
+    const errRes = createErrorResponse(new BadRequestError('Invalid input parameter'));
+    expect(errRes.statusCode).toBe(400);
+    expect((errRes as any).headers['Content-Type']).toBe('application/json');
+    expect((errRes as any).headers['Access-Control-Allow-Origin']).toBeUndefined();
+
+    // buildCorsHeaders explicitly constructs full CORS headers for OPTIONS preflight
+    const corsHeaders = buildCorsHeaders('https://campus-fix-ten-iota.vercel.app');
+    expect(corsHeaders['Access-Control-Allow-Origin']).toBe('https://campus-fix-ten-iota.vercel.app');
+    expect(corsHeaders['Access-Control-Allow-Methods']).toContain('GET, POST, PATCH, OPTIONS');
+    expect(corsHeaders['Access-Control-Allow-Headers']).toContain('Authorization, Content-Type');
   });
 
   it('serves unauthenticated health check', async () => {

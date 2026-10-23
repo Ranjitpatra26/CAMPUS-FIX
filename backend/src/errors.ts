@@ -55,18 +55,21 @@ export function buildCorsHeaders(allowedOrigin: string): Record<string, string> 
 export function createJsonResponse(
   statusCode: number,
   body: unknown,
-  allowedOrigin: string = '*'
+  additionalHeaders?: Record<string, string>
 ): APIGatewayProxyResultV2 {
   return {
     statusCode,
-    headers: buildCorsHeaders(allowedOrigin),
+    headers: {
+      'Content-Type': 'application/json',
+      ...(additionalHeaders || {})
+    },
     body: JSON.stringify(body)
   };
 }
 
 export function createErrorResponse(
   error: unknown,
-  allowedOrigin: string = '*'
+  additionalHeaders?: Record<string, string>
 ): APIGatewayProxyResultV2 {
   if (error instanceof HttpError) {
     return createJsonResponse(
@@ -76,7 +79,7 @@ export function createErrorResponse(
         message: error.message,
         statusCode: error.statusCode
       },
-      allowedOrigin
+      additionalHeaders
     );
   }
 
@@ -89,6 +92,6 @@ export function createErrorResponse(
       message: 'An unexpected internal server error occurred.',
       statusCode: 500
     },
-    allowedOrigin
+    additionalHeaders
   );
 }

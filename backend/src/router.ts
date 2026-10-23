@@ -98,15 +98,11 @@ export class AppRouter {
     try {
       // 2. Health check route (unauthenticated)
       if (rawPath === '/health' || rawPath === '/') {
-        return createJsonResponse(
-          200,
-          {
-            service: 'CampusFixBackendFunction',
-            status: 'HEALTHY',
-            timestamp: new Date().toISOString()
-          },
-          origin
-        );
+        return createJsonResponse(200, {
+          service: 'CampusFixBackendFunction',
+          status: 'HEALTHY',
+          timestamp: new Date().toISOString()
+        });
       }
 
       // 3. Authenticate incoming request via Cognito ID Token
@@ -123,7 +119,7 @@ export class AppRouter {
         const nextToken = queryParams.nextToken;
 
         const result = await this.db.getComplaintsByStudent(user.sub, limit, nextToken);
-        return createJsonResponse(200, result, origin);
+        return createJsonResponse(200, result);
       }
 
       // Route: POST /complaints
@@ -177,7 +173,7 @@ export class AppRouter {
           console.warn('[CampusFix Notification Warning] Failed to send admin notification:', notificationErr);
         }
 
-        return createJsonResponse(201, newComplaint, origin);
+        return createJsonResponse(201, newComplaint);
       }
 
       // Route: GET /complaints/all (Admin Only)
@@ -195,7 +191,7 @@ export class AppRouter {
         const nextToken = qp.nextToken;
 
         const result = await this.db.getAllComplaints(filters, limit, nextToken);
-        return createJsonResponse(200, result, origin);
+        return createJsonResponse(200, result);
       }
 
       // Route: PATCH /complaints/:id/status (Admin Only)
@@ -246,7 +242,7 @@ export class AppRouter {
           console.warn('[CampusFix Notification Warning] Failed to send student status notification:', notificationErr);
         }
 
-        return createJsonResponse(200, updated, origin);
+        return createJsonResponse(200, updated);
       }
 
       // Route: PATCH /complaints/:id/assign (Admin Only)
@@ -301,7 +297,7 @@ export class AppRouter {
           console.warn('[CampusFix Notification Warning] Failed to send student assignment notification:', notificationErr);
         }
 
-        return createJsonResponse(200, updated, origin);
+        return createJsonResponse(200, updated);
       }
 
       // Route: GET /complaints/:id
@@ -319,13 +315,13 @@ export class AppRouter {
           throw new ForbiddenError('You do not have permission to view another student\'s complaint.');
         }
 
-        return createJsonResponse(200, complaint, origin);
+        return createJsonResponse(200, complaint);
       }
 
       // If no route matches:
       throw new NotFoundError(`Route ${method} ${rawPath} not found.`);
     } catch (err) {
-      return createErrorResponse(err, origin);
+      return createErrorResponse(err);
     }
   }
 }
