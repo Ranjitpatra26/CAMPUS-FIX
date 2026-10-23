@@ -13,11 +13,17 @@ export interface CognitoConfig {
   scope?: string;
 }
 
+export interface CognitoLoginOptions {
+  prompt?: 'login' | 'none' | 'select_account' | string;
+  forceLogin?: boolean;
+}
+
 export class CognitoAuthAdapter implements IAuthService {
   private userManager: UserManager | null = null;
   private config: CognitoConfig;
   private currentUser: User | null = null;
   private callbackPromise: Promise<User | null> | null = null;
+  private justCompletedCallbackUser: User | null = null;
 
   constructor(customConfig?: Partial<CognitoConfig>) {
     const rawRegion = customConfig?.region || import.meta.env.VITE_AWS_REGION || 'ap-southeast-2';
@@ -136,7 +142,7 @@ export class CognitoAuthAdapter implements IAuthService {
     };
   }
 
-  async loginWithCognito(): Promise<void> {
+  async loginWithCognito(options?: CognitoLoginOptions): Promise<void> {
     if (!this.isCognitoConfigured() || !this.userManager) {
       throw new Error(
         'Amazon Cognito is not fully configured in environment variables. Please specify VITE_COGNITO_USER_POOL_ID, VITE_COGNITO_CLIENT_ID, and VITE_COGNITO_DOMAIN.'
@@ -158,15 +164,19 @@ export class CognitoAuthAdapter implements IAuthService {
       }
     }
 
+    const prompt = options?.prompt || (options?.forceLogin ? 'login' : undefined);
+
     authLogger.logStage('SSO_TRIGGER', {
       redirectUri: this.config.redirectUri,
-      scope: this.config.scope || 'openid email'
+      scope: this.config.scope || 'openid email',
+      prompt
     });
 
     // signinRedirect automatically generates PKCE code_verifier, code_challenge (S256), and state
     await this.userManager.signinRedirect({
       redirect_uri: this.config.redirectUri,
-      scope: this.config.scope || 'openid email'
+      scope: this.config.scope || 'openid email',
+      ...(prompt ? { prompt } : {})
     });
   }
 
@@ -176,11 +186,6 @@ export class CognitoAuthAdapter implements IAuthService {
     // Concurrency protection: if callback is already in-flight, return the existing promise
     if (this.callbackPromise) {
       return this.callbackPromise;
-    }
-
-    // If session is already verified and active, return current user
-    if (this.currentUser) {
-      return this.currentUser;
     }
 
     const params = new URLSearchParams(window.location.search);
@@ -226,6 +231,7 @@ export class CognitoAuthAdapter implements IAuthService {
         this.cleanUrlParams();
         const appUser = this.mapOidcUserToAppUser(oidcUser);
         this.currentUser = appUser;
+        this.justCompletedCallbackUser = appUser;
         authLogger.logStage('SESSION_RESTORED', {
           source: 'cognito',
           role: appUser.role,
@@ -237,6 +243,7 @@ export class CognitoAuthAdapter implements IAuthService {
         this.cleanUrlParams();
         // Ensure user is not authenticated if verification fails
         this.currentUser = null;
+        this.justCompletedCallbackUser = null;
         throw new Error(`Cognito callback verification failed: ${err?.message || 'Invalid or expired authorization code'}`);
       } finally {
         this.callbackPromise = null;
@@ -244,6 +251,22 @@ export class CognitoAuthAdapter implements IAuthService {
     })();
 
     return this.callbackPromise;
+  }
+
+  public consumeCallbackUser(): User | null {
+    const user = this.justCompletedCallbackUser;
+    this.justCompletedCallbackUser = null;
+    return user;
+  }
+
+  public isCallbackPending(): boolean {
+    return Boolean(this.callbackPromise);
+  }
+
+  public hasCallbackParameters(): boolean {
+    if (typeof window === 'undefined') return false;
+    const params = new URLSearchParams(window.location.search);
+    return params.has('code') || params.has('error');
   }
 
   async getCurrentUser(): Promise<User | null> {
@@ -258,9 +281,14 @@ export class CognitoAuthAdapter implements IAuthService {
           const appUser = this.mapOidcUserToAppUser(oidcUser);
           this.currentUser = appUser;
           return appUser;
+        } else {
+          this.currentUser = null;
+          return null;
         }
       } catch (e) {
         console.warn('Could not retrieve active OIDC user', e);
+        this.currentUser = null;
+        return null;
       }
     }
 
@@ -281,14 +309,27 @@ export class CognitoAuthAdapter implements IAuthService {
     return null;
   }
 
-  async logout(): Promise<void> {
+  public getLogoutUrl(): string {
+    const { domain, clientId, redirectUri } = this.config;
+    return `https://${domain}/logout?client_id=${clientId}&logout_uri=${encodeURIComponent(redirectUri)}`;
+  }
+
+  async logout(options?: { redirect?: boolean }): Promise<void> {
     this.currentUser = null;
+    this.justCompletedCallbackUser = null;
     if (this.userManager) {
       try {
         await this.userManager.removeUser();
       } catch (e) {
         console.warn('Error removing OIDC user session', e);
       }
+    }
+
+    const shouldRedirect = options?.redirect ?? true;
+    if (shouldRedirect && this.isCognitoConfigured() && typeof window !== 'undefined' && window.location) {
+      const logoutUrl = this.getLogoutUrl();
+      authLogger.logStage('LOGOUT', { logoutUrl });
+      window.location.href = logoutUrl;
     }
   }
 

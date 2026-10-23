@@ -1,0 +1,23 @@
+{
+  "name": "campusfix-backend",
+  "version": "1.0.0",
+  "description": "CampusFixBackendFunction single AWS Lambda backend for CampusFix complaint management system",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "package": "node package-backend.mjs",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.758.0",
+    "@aws-sdk/client-ses": "^3.1156.0",
+    "@aws-sdk/lib-dynamodb": "^3.758.0",
+    "aws-jwt-verify": "^4.0.1"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.147",
+    "@types/node": "^24.19.2",
+    "typescript": "^5.8.0 || ^6.0.0"
+  }
+}

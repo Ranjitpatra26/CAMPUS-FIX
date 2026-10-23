@@ -12,14 +12,20 @@ export interface RegisterInput {
 export interface IAuthService {
   login(email: string, password?: string): Promise<User>;
   register(input: RegisterInput): Promise<User>;
-  logout(): Promise<void>;
+  logout(options?: { redirect?: boolean }): Promise<void>;
   getCurrentUser(): Promise<User | null>;
   switchDemoRole(role: UserRole): Promise<User>;
   getDemoUsers(): { student: User; admin: User };
-  loginWithCognito?(): Promise<void>;
+  loginWithCognito?(options?: CognitoLoginOptions): Promise<void>;
   handleCallback?(): Promise<User | null>;
   isCognitoConfigured?(): boolean;
   getIdToken?(): Promise<string | null>;
+  consumeCallbackUser?(): User | null;
+  isCallbackPending?(): boolean;
+  hasCallbackParameters?(): boolean;
+  getAuthSource?(): Promise<'cognito' | 'mock' | 'none'>;
+  isMockAuthEnabled?(): boolean;
+  getLogoutUrl?(): string;
 }
 
 const AUTH_STORAGE_KEY = 'campusfix_mock_current_user_v1';
@@ -147,7 +153,7 @@ export class MockAuthAdapter implements IAuthService {
   }
 }
 
-import { CognitoAuthAdapter, CognitoConfig } from './cognitoAuthAdapter';
+import { CognitoAuthAdapter, CognitoConfig, CognitoLoginOptions } from './cognitoAuthAdapter';
 
 export class CompositeAuthService implements IAuthService {
   private mockAdapter: MockAuthAdapter;
@@ -173,12 +179,28 @@ export class CompositeAuthService implements IAuthService {
     return this.cognitoAdapter.isCognitoConfigured();
   }
 
-  async loginWithCognito(): Promise<void> {
-    return this.cognitoAdapter.loginWithCognito();
+  async loginWithCognito(options?: CognitoLoginOptions): Promise<void> {
+    return this.cognitoAdapter.loginWithCognito(options);
+  }
+
+  getLogoutUrl(): string {
+    return this.cognitoAdapter.getLogoutUrl?.() || '';
   }
 
   async handleCallback(): Promise<User | null> {
     return this.cognitoAdapter.handleCallback();
+  }
+
+  consumeCallbackUser(): User | null {
+    return this.cognitoAdapter.consumeCallbackUser?.() || null;
+  }
+
+  isCallbackPending(): boolean {
+    return this.cognitoAdapter.isCallbackPending?.() || false;
+  }
+
+  hasCallbackParameters(): boolean {
+    return this.cognitoAdapter.hasCallbackParameters?.() || false;
   }
 
   async login(email: string, password?: string): Promise<User> {
@@ -195,9 +217,13 @@ export class CompositeAuthService implements IAuthService {
     return this.mockAdapter.register(input);
   }
 
-  async logout(): Promise<void> {
-    await this.cognitoAdapter.logout();
+  async logout(options?: { redirect?: boolean }): Promise<void> {
+    const isCognitoSession = Boolean(await this.cognitoAdapter.getCurrentUser());
     await this.mockAdapter.logout();
+    if (this.cognitoAdapter.isCognitoConfigured()) {
+      const shouldRedirect = options?.redirect ?? (!this.isMockAuthEnabled() || isCognitoSession);
+      await this.cognitoAdapter.logout({ redirect: shouldRedirect });
+    }
   }
 
   async getCurrentUser(): Promise<User | null> {

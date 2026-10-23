@@ -11,7 +11,8 @@ import {
   Clock,
   RefreshCw,
   CheckCircle2,
-  PlusCircle
+  PlusCircle,
+  AlertTriangle
 } from 'lucide-react';
 import { NavigationPage } from '../../components/layout/Sidebar';
 
@@ -28,15 +29,19 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   const navigate = useNavigate();
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const loadData = async () => {
     if (!user) return;
     setIsLoading(true);
+    setError(null);
     try {
       const data = await complaintRepository.getMyComplaints(user.id);
       setComplaints(data);
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      const msg = e?.message || 'Failed to load complaints from backend.';
+      setError(msg);
+      console.error('Error loading student complaints:', e);
     } finally {
       setIsLoading(false);
     }
@@ -178,6 +183,41 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
           accentBar="lime"
         />
       </div>
+
+      {/* Error / Permission Banner */}
+      {error && (
+        <div
+          className="neo-card"
+          role="alert"
+          style={{
+            padding: '1.25rem 1.5rem',
+            backgroundColor: 'var(--accent-red-subtle, rgba(239, 68, 68, 0.1))',
+            borderLeft: '5px solid var(--accent-red, #ef4444)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '1rem',
+            color: 'var(--text-primary)'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <AlertTriangle size={24} style={{ color: 'var(--accent-red, #ef4444)', flexShrink: 0 }} />
+            <div>
+              <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>
+                {error.includes('403') || error.toLowerCase().includes('forbidden')
+                  ? 'Access Denied (403 Forbidden)'
+                  : 'Unable to Load Complaints'}
+              </div>
+              <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.15rem' }}>
+                {error}
+              </div>
+            </div>
+          </div>
+          <Button variant="secondary" size="sm" onClick={loadData}>
+            Retry
+          </Button>
+        </div>
+      )}
 
       {/* Complaints Table Section */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>

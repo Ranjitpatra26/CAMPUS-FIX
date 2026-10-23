@@ -5,7 +5,7 @@ import { ComplaintTable } from '../../components/complaints/ComplaintTable';
 import { StatusUpdateModal } from '../../components/complaints/StatusUpdateModal';
 import { AssignDepartmentModal } from '../../components/complaints/AssignDepartmentModal';
 import { Button } from '../../components/ui/Button';
-import { RotateCcw } from 'lucide-react';
+import { RotateCcw, AlertTriangle } from 'lucide-react';
 import { useNotification } from '../../context/NotificationContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -20,10 +20,22 @@ export const AllComplaintsPage: React.FC<AllComplaintsPageProps> = ({ onViewDeta
   const [activeModalComplaint, setActiveModalComplaint] = useState<Complaint | null>(null);
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const loadData = async () => {
-    const list = await complaintRepository.getAllComplaints();
-    setComplaints(list);
+    setIsLoading(true);
+    setError(null);
+    try {
+      const list = await complaintRepository.getAllComplaints();
+      setComplaints(list);
+    } catch (err: any) {
+      const msg = err?.message || 'Failed to retrieve central complaints.';
+      setError(msg);
+      console.error('Error loading complaints in AllComplaintsPage:', err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -104,6 +116,40 @@ export const AllComplaintsPage: React.FC<AllComplaintsPageProps> = ({ onViewDeta
           Reset Demo Data
         </Button>
       </div>
+
+      {error && (
+        <div
+          className="neo-card"
+          role="alert"
+          style={{
+            padding: '1.25rem 1.5rem',
+            backgroundColor: 'var(--accent-red-subtle, rgba(239, 68, 68, 0.1))',
+            borderLeft: '5px solid var(--accent-red, #ef4444)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '1rem',
+            color: 'var(--text-primary)'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <AlertTriangle size={24} style={{ color: 'var(--accent-red, #ef4444)', flexShrink: 0 }} />
+            <div>
+              <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>
+                {error.includes('403') || error.toLowerCase().includes('forbidden') || error.toLowerCase().includes('administrative')
+                  ? 'Access Denied: Administrator Access Required (403)'
+                  : 'Unable to Retrieve Central Complaints'}
+              </div>
+              <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.15rem' }}>
+                {error}
+              </div>
+            </div>
+          </div>
+          <Button variant="secondary" size="sm" onClick={loadData}>
+            Retry
+          </Button>
+        </div>
+      )}
 
       <ComplaintTable
         complaints={complaints}

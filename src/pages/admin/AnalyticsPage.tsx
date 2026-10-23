@@ -4,13 +4,31 @@ import { complaintRepository } from '../../services/complaints/localStorageRepos
 import { AnalyticsCharts } from '../../components/dashboard/Charts/AnalyticsCharts';
 import { KpiCard } from '../../components/dashboard/KpiCard';
 import { Card } from '../../components/ui/Card';
-import { BarChart3, TrendingUp, Clock, CheckCircle, ShieldCheck } from 'lucide-react';
+import { Button } from '../../components/ui/Button';
+import { BarChart3, TrendingUp, Clock, CheckCircle, ShieldCheck, AlertTriangle } from 'lucide-react';
 
 export const AnalyticsPage: React.FC = () => {
   const [complaints, setComplaints] = useState<Complaint[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await complaintRepository.getAllComplaints();
+      setComplaints(data);
+    } catch (err: any) {
+      const msg = err?.message || 'Failed to retrieve analytics data.';
+      setError(msg);
+      console.error('Error loading analytics:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    complaintRepository.getAllComplaints().then(setComplaints);
+    loadData();
   }, []);
 
   const total = complaints.length;
@@ -59,6 +77,40 @@ export const AnalyticsPage: React.FC = () => {
           Real-time statistical evaluation of incident resolution velocity, departmental workload, and turnaround times.
         </p>
       </div>
+
+      {error && (
+        <div
+          className="neo-card"
+          role="alert"
+          style={{
+            padding: '1.25rem 1.5rem',
+            backgroundColor: 'var(--accent-red-subtle, rgba(239, 68, 68, 0.1))',
+            borderLeft: '5px solid var(--accent-red, #ef4444)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '1rem',
+            color: 'var(--text-primary)'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <AlertTriangle size={24} style={{ color: 'var(--accent-red, #ef4444)', flexShrink: 0 }} />
+            <div>
+              <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>
+                {error.includes('403') || error.toLowerCase().includes('forbidden') || error.toLowerCase().includes('administrative')
+                  ? 'Access Denied: Administrator Access Required (403)'
+                  : 'Unable to Load Analytics Data'}
+              </div>
+              <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.15rem' }}>
+                {error}
+              </div>
+            </div>
+          </div>
+          <Button variant="secondary" size="sm" onClick={loadData}>
+            Retry
+          </Button>
+        </div>
+      )}
 
       {/* KPI Stats */}
       <div

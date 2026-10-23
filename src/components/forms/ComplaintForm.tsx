@@ -150,7 +150,9 @@ export const ComplaintForm: React.FC<ComplaintFormProps> = ({ onSuccess, onCance
         `Your ticket ${newComplaint.id} has been registered.`
       );
     } catch (err: any) {
-      setErrors({ form: err?.message || 'Failed to submit complaint.' });
+      const msg = err?.message || 'Failed to submit complaint.';
+      setErrors({ form: msg });
+      addToast('error', 'Submission Failed', msg);
     } finally {
       setIsSubmitting(false);
     }

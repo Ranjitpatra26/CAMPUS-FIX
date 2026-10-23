@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrandLogo } from '../../components/brand/BrandLogo';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
@@ -18,7 +18,17 @@ import {
 } from 'lucide-react';
 
 export const LoginPage: React.FC = () => {
-  const { login, switchRole, loginWithCognito, isCognitoConfigured, isMockAuthEnabled, callbackError } = useAuth();
+  const {
+    user,
+    role,
+    isLoading: isAuthLoading,
+    login,
+    switchRole,
+    loginWithCognito,
+    isCognitoConfigured,
+    isMockAuthEnabled,
+    callbackError
+  } = useAuth();
   const { addToast } = useNotification();
   const navigate = useNavigate();
 
@@ -27,52 +37,64 @@ export const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const isPending = isSubmitting || isAuthLoading;
+
+  // Automatically redirect already-authenticated users to their dashboard without requiring another click
+  useEffect(() => {
+    if (!isAuthLoading && user) {
+      navigate(user.role === 'admin' ? '/admin' : '/student', { replace: true });
+    }
+  }, [user, isAuthLoading, navigate]);
 
   const handleCognitoLogin = async () => {
-    setIsLoading(true);
+    if (isPending) return;
+    setIsSubmitting(true);
     setError(null);
     try {
       await loginWithCognito();
     } catch (err: any) {
       setError(err?.message || 'Cognito sign-in could not be initiated.');
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isPending) return;
     if (!email.trim()) {
       setError('College email is required.');
       return;
     }
 
-    setIsLoading(true);
+    setIsSubmitting(true);
     setError(null);
 
     try {
       const loggedInUser = await login(email, password);
       addToast('success', 'Welcome to CampusFix', 'Signed in successfully.');
-      navigate(loggedInUser.role === 'admin' ? '/admin' : '/student');
+      navigate(loggedInUser.role === 'admin' ? '/admin' : '/student', { replace: true });
     } catch (err: any) {
       setError(err?.message || 'Login failed. Please verify credentials.');
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
-  const handleQuickDemo = async (role: 'student' | 'admin') => {
-    setIsLoading(true);
+  const handleQuickDemo = async (demoRole: 'student' | 'admin') => {
+    if (isPending) return;
+    setIsSubmitting(true);
     try {
-      await switchRole(role);
+      await switchRole(demoRole);
       addToast(
         'success',
         'Demo Session Active',
-        `Logged in as ${role === 'admin' ? 'Dr. Aris Thorne (Chief Admin)' : 'Rohan Sharma (Student)'}.`
+        `Logged in as ${demoRole === 'admin' ? 'Dr. Aris Thorne (Chief Admin)' : 'Rohan Sharma (Student)'}.`
       );
-      navigate(role === 'admin' ? '/admin' : '/student');
+      navigate(demoRole === 'admin' ? '/admin' : '/student', { replace: true });
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -190,7 +212,7 @@ export const LoginPage: React.FC = () => {
                 size="md"
                 onClick={() => handleQuickDemo('student')}
                 leftIcon={<GraduationCap size={16} />}
-                disabled={isLoading}
+                disabled={isPending}
               >
                 Continue as Student
               </Button>
@@ -201,7 +223,7 @@ export const LoginPage: React.FC = () => {
                 size="md"
                 onClick={() => handleQuickDemo('admin')}
                 leftIcon={<ShieldAlert size={16} />}
-                disabled={isLoading}
+                disabled={isPending}
               >
                 Continue as Administrator
               </Button>
@@ -269,9 +291,12 @@ export const LoginPage: React.FC = () => {
             onClick={handleCognitoLogin}
             style={{ width: '100%' }}
             leftIcon={<ShieldAlert size={18} />}
-            disabled={isLoading}
+            disabled={isPending}
+            isLoading={isSubmitting}
           >
-            Sign In with CampusFix SSO (Amazon Cognito)
+            {isSubmitting
+              ? 'Connecting to CampusFix SSO...'
+              : 'Sign In with CampusFix SSO (Amazon Cognito)'}
           </Button>
           {!isCognitoConfigured && (
             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.4rem', textAlign: 'center' }}>
@@ -382,7 +407,8 @@ export const LoginPage: React.FC = () => {
             type="submit"
             variant="primary"
             size="lg"
-            isLoading={isLoading}
+            isLoading={isSubmitting}
+            disabled={isPending}
             rightIcon={<ArrowRight size={18} />}
           >
             Sign In to CampusFix

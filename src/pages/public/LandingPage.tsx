@@ -8,7 +8,6 @@ import { PriorityBadge } from '../../components/complaints/PriorityBadge';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useNotification } from '../../context/NotificationContext';
-import { complaintRepository } from '../../services/complaints/localStorageRepository';
 import { motion } from 'framer-motion';
 import {
   ArrowRight,
@@ -43,7 +42,7 @@ export const LandingPage: React.FC = () => {
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [previewTab, setPreviewTab] = useState<'student' | 'admin'>('student');
-  const [demoStats, setDemoStats] = useState({
+  const [demoStats] = useState({
     total: 16,
     resolved: 5,
     inProgress: 6,
@@ -51,19 +50,6 @@ export const LandingPage: React.FC = () => {
     departments: 8,
     avgSla: '4.2h'
   });
-
-  useEffect(() => {
-    complaintRepository.getStatistics().then(stats => {
-      setDemoStats({
-        total: stats.total,
-        resolved: stats.resolved,
-        inProgress: stats.inProgress,
-        critical: stats.critical,
-        departments: 8,
-        avgSla: '4.2h'
-      });
-    });
-  }, []);
 
   const handleLaunchDemo = async (targetRole: 'student' | 'admin') => {
     await switchRole(targetRole);

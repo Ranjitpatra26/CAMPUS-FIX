@@ -344,5 +344,92 @@ export class LocalStorageComplaintRepository implements IComplaintRepository {
   }
 }
 
-// Singleton instance export for local mock usage
-export const complaintRepository = new LocalStorageComplaintRepository();
+import { ApiComplaintRepository } from './apiComplaintRepository';
+
+export class CompositeComplaintRepository implements IComplaintRepository {
+  private localRepo: LocalStorageComplaintRepository;
+  private apiRepo: ApiComplaintRepository;
+  private mockOverride?: boolean;
+
+  constructor(options?: { mockEnabled?: boolean; apiBaseUrl?: string }) {
+    this.localRepo = new LocalStorageComplaintRepository();
+    this.apiRepo = new ApiComplaintRepository(options?.apiBaseUrl);
+    this.mockOverride = options?.mockEnabled;
+  }
+
+  isMockEnabled(): boolean {
+    if (this.mockOverride !== undefined) {
+      return this.mockOverride;
+    }
+    const raw = import.meta.env.VITE_ENABLE_MOCK_AUTH;
+    return raw !== 'false' && raw !== false;
+  }
+
+  public getApiRepo(): ApiComplaintRepository {
+    return this.apiRepo;
+  }
+
+  public getLocalRepo(): LocalStorageComplaintRepository {
+    return this.localRepo;
+  }
+
+  private getActiveRepo(): IComplaintRepository {
+    if (this.isMockEnabled()) {
+      return this.localRepo;
+    }
+    return this.apiRepo;
+  }
+
+  async getAllComplaints(filters?: ComplaintFilterOptions): Promise<Complaint[]> {
+    return this.getActiveRepo().getAllComplaints(filters);
+  }
+
+  async getMyComplaints(studentId: string, filters?: ComplaintFilterOptions): Promise<Complaint[]> {
+    return this.getActiveRepo().getMyComplaints(studentId, filters);
+  }
+
+  async getComplaintById(id: string): Promise<Complaint | null> {
+    return this.getActiveRepo().getComplaintById(id);
+  }
+
+  async createComplaint(input: CreateComplaintInput, student: User): Promise<Complaint> {
+    // When mock is disabled (cloud mode), this calls ApiComplaintRepository.
+    // If the API / DynamoDB request fails, the error is thrown directly to the caller.
+    // It NEVER silently falls back to localStorage.
+    return this.getActiveRepo().createComplaint(input, student);
+  }
+
+  async updateComplaintStatus(
+    id: string,
+    newStatus: ComplaintStatus,
+    actor: User,
+    remark?: string
+  ): Promise<Complaint> {
+    return this.getActiveRepo().updateComplaintStatus(id, newStatus, actor, remark);
+  }
+
+  async assignComplaint(
+    id: string,
+    department: DepartmentName,
+    assignedTo: string,
+    actor: User,
+    remark?: string
+  ): Promise<Complaint> {
+    return this.getActiveRepo().assignComplaint(id, department, assignedTo, actor, remark);
+  }
+
+  async addAdministratorRemark(id: string, remark: string, actor: User): Promise<Complaint> {
+    return this.getActiveRepo().addAdministratorRemark(id, remark, actor);
+  }
+
+  async resetToDefaults(): Promise<void> {
+    return this.getActiveRepo().resetToDefaults();
+  }
+
+  async getStatistics(studentId?: string): Promise<ComplaintStatistics> {
+    return this.getActiveRepo().getStatistics(studentId);
+  }
+}
+
+// Master repository instance routing to DynamoDB/Lambda in cloud mode and LocalStorage in mock mode
+export const complaintRepository = new CompositeComplaintRepository();

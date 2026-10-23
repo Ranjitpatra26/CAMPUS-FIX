@@ -328,4 +328,45 @@ describe('Amazon Cognito OIDC Integration & Callback Handling', () => {
       })
     ).rejects.toThrow(/Local student registration is disabled/);
   });
+
+  it('correctly tracks and consumes just-completed callback user for single-click dashboard navigation', async () => {
+    const adapter = new CognitoAuthAdapter({
+      region: 'ap-southeast-2',
+      userPoolId: 'ap-southeast-2_tNhqL8tGi',
+      clientId: '4oq0kq3qljmhdu8rmbjclt94sl',
+      domain: 'ap-southeast-2tnhql8tgi.auth.ap-southeast-2.amazoncognito.com'
+    });
+
+    window.location.search = '?code=code_nav_123&state=state_nav_456';
+    expect(adapter.hasCallbackParameters()).toBe(true);
+
+    const userManager = (adapter as any).userManager;
+    userManager.signinCallback = vi.fn().mockImplementation(async () => {
+      await new Promise(r => setTimeout(r, 15));
+      return {
+        id_token: 'header.payload.signature',
+        profile: {
+          sub: 'sub-student-single-click',
+          email: 'student.nav@campus.edu',
+          'cognito:groups': ['Students']
+        }
+      };
+    });
+
+    const callbackPromise = adapter.handleCallback();
+    expect(adapter.isCallbackPending()).toBe(true);
+
+    const user = await callbackPromise;
+    expect(adapter.isCallbackPending()).toBe(false);
+    expect(user?.role).toBe('student');
+
+    // First consumption returns the completed callback user
+    const consumedFirst = adapter.consumeCallbackUser();
+    expect(consumedFirst).not.toBeNull();
+    expect(consumedFirst?.email).toBe('student.nav@campus.edu');
+
+    // Second consumption returns null (ensuring single navigation trigger)
+    const consumedSecond = adapter.consumeCallbackUser();
+    expect(consumedSecond).toBeNull();
+  });
 });

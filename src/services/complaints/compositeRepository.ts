@@ -1,0 +1,1 @@
+export { CompositeComplaintRepository } from './localStorageRepository';

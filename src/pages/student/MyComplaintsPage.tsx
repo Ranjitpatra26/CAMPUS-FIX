@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { ComplaintTable } from '../../components/complaints/ComplaintTable';
 import { Button } from '../../components/ui/Button';
 import { useNavigate } from 'react-router-dom';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, AlertTriangle } from 'lucide-react';
 import { NavigationPage } from '../../components/layout/Sidebar';
 
 interface MyComplaintsPageProps {
@@ -21,14 +21,26 @@ export const MyComplaintsPage: React.FC<MyComplaintsPageProps> = ({
   const navigate = useNavigate();
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const loadData = async () => {
     if (!user) return;
     setIsLoading(true);
-    complaintRepository
-      .getMyComplaints(user.id)
-      .then(setComplaints)
-      .finally(() => setIsLoading(false));
+    setError(null);
+    try {
+      const data = await complaintRepository.getMyComplaints(user.id);
+      setComplaints(data);
+    } catch (err: any) {
+      const msg = err?.message || 'Failed to retrieve complaints.';
+      setError(msg);
+      console.error('Error fetching student complaints:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
   }, [user]);
 
   const handleNavigateSubmit = () => {
@@ -99,6 +111,40 @@ export const MyComplaintsPage: React.FC<MyComplaintsPageProps> = ({
           Submit New Complaint
         </Button>
       </div>
+
+      {error && (
+        <div
+          className="neo-card"
+          role="alert"
+          style={{
+            padding: '1.25rem 1.5rem',
+            backgroundColor: 'var(--accent-red-subtle, rgba(239, 68, 68, 0.1))',
+            borderLeft: '5px solid var(--accent-red, #ef4444)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '1rem',
+            color: 'var(--text-primary)'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <AlertTriangle size={24} style={{ color: 'var(--accent-red, #ef4444)', flexShrink: 0 }} />
+            <div>
+              <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>
+                {error.includes('403') || error.toLowerCase().includes('forbidden')
+                  ? 'Access Denied (403 Forbidden)'
+                  : 'Unable to Retrieve Complaints'}
+              </div>
+              <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.15rem' }}>
+                {error}
+              </div>
+            </div>
+          </div>
+          <Button variant="secondary" size="sm" onClick={loadData}>
+            Retry
+          </Button>
+        </div>
+      )}
 
       <ComplaintTable
         complaints={complaints}
