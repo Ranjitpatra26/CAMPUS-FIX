@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { useTheme } from '../../context/ThemeContext';
-import { useNotification } from '../../context/NotificationContext';
 import { Sidebar, NavigationPage } from './Sidebar';
 import { Navbar } from './Navbar';
+import { BottomNav } from './BottomNav';
 import { NotificationsDrawer } from './NotificationsDrawer';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { complaintRepository } from '../../services/complaints/localStorageRepository';
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -17,7 +15,7 @@ interface AppShellProps {
 const COLLAPSED_STORAGE_KEY = 'campusfix_sidebar_collapsed';
 
 export const AppShell: React.FC<AppShellProps> = ({ children, title, subtitle }) => {
-  const { user, role } = useAuth();
+  const { role } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -135,6 +133,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children, title, subtitle })
 
   // Derive responsive sidebar width
   const sidebarWidth = isCollapsed ? '76px' : '260px';
+  const isStudent = role === 'student';
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-primary)' }}>
@@ -173,6 +172,19 @@ export const AppShell: React.FC<AppShellProps> = ({ children, title, subtitle })
               width: 100% !important;
             }
           }
+          .app-main-content {
+            flex: 1;
+            padding: clamp(1rem, 2.5vw, 2rem) clamp(0.75rem, 2vw, 1.75rem);
+            max-width: 1380px;
+            width: 100%;
+            margin: 0 auto;
+            box-sizing: border-box;
+          }
+          @media (max-width: 768px) {
+            .app-main-content.student-view {
+              padding-bottom: calc(4.75rem + env(safe-area-inset-bottom, 0px)) !important;
+            }
+          }
         `}</style>
 
         {/* Top Navbar */}
@@ -187,19 +199,13 @@ export const AppShell: React.FC<AppShellProps> = ({ children, title, subtitle })
         />
 
         {/* Main Content Viewport */}
-        <main
-          style={{
-            flex: 1,
-            padding: '2rem 1.75rem',
-            maxWidth: '1380px',
-            width: '100%',
-            margin: '0 auto',
-            boxSizing: 'border-box'
-          }}
-        >
+        <main className={`app-main-content ${isStudent ? 'student-view' : ''}`}>
           {children}
         </main>
       </div>
+
+      {/* Mobile Bottom Navigation for Students */}
+      {isStudent && <BottomNav />}
 
       {/* Global Notifications Drawer */}
       <NotificationsDrawer

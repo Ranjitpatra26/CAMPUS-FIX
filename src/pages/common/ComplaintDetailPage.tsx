@@ -144,7 +144,7 @@ export const ComplaintDetailPage: React.FC<ComplaintDetailPageProps> = ({
         </Button>
 
         {role === 'admin' && (
-          <div style={{ display: 'flex', gap: '0.65rem' }}>
+          <div style={{ display: 'flex', gap: '0.65rem', flexWrap: 'wrap' }}>
             <Button
               variant="blue"
               size="sm"
@@ -170,7 +170,7 @@ export const ComplaintDetailPage: React.FC<ComplaintDetailPageProps> = ({
       <div
         className="neo-card"
         style={{
-          padding: '1.75rem',
+          padding: 'clamp(1.25rem, 3vw, 1.75rem)',
           backgroundColor: 'var(--bg-surface)'
         }}
       >
@@ -184,7 +184,7 @@ export const ComplaintDetailPage: React.FC<ComplaintDetailPageProps> = ({
             marginBottom: '1rem'
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
             <span
               className="font-mono"
               style={{
@@ -216,7 +216,7 @@ export const ComplaintDetailPage: React.FC<ComplaintDetailPageProps> = ({
             </span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
             <PriorityBadge priority={complaint.priority} />
             <StatusBadge status={complaint.status} />
           </div>
@@ -277,7 +277,7 @@ export const ComplaintDetailPage: React.FC<ComplaintDetailPageProps> = ({
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))',
           gap: '1.5rem'
         }}
       >

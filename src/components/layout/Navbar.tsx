@@ -70,32 +70,35 @@ export const Navbar: React.FC<NavbarProps> = ({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '0 1.5rem',
-        gap: '1rem',
+        padding: '0 clamp(0.75rem, 2vw, 1.5rem)',
+        gap: 'clamp(0.5rem, 1.5vw, 1rem)',
         boxSizing: 'border-box'
       }}
     >
       {/* Left: Mobile Drawer Trigger + Title/Breadcrumb */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', minWidth: 0 }}>
         {/* Mobile Hamburger Button */}
         <button
           onClick={onOpenMobileSidebar}
           className="neo-btn neo-btn-secondary neo-btn-sm flex lg:hidden"
-          style={{ padding: '0.45rem', alignItems: 'center', justifyContent: 'center' }}
+          style={{ padding: '0.45rem', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
           aria-label="Open navigation menu"
         >
           <Menu size={18} />
         </button>
 
-        <div>
+        <div style={{ minWidth: 0 }}>
           <h1
             className="font-heading"
             style={{
-              fontSize: '1.15rem',
+              fontSize: 'clamp(0.95rem, 3.2vw, 1.15rem)',
               fontWeight: 800,
               color: 'var(--text-primary)',
               lineHeight: 1.1,
-              margin: 0
+              margin: 0,
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis'
             }}
           >
             {title || 'CampusFix'}
@@ -106,7 +109,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                 fontSize: '0.75rem',
                 color: 'var(--text-muted)',
                 margin: 0,
-                display: 'none'
+                display: 'none',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
               }}
               className="md:block"
             >
@@ -117,15 +123,16 @@ export const Navbar: React.FC<NavbarProps> = ({
       </div>
 
       {/* Right Controls */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
 
-        {/* Quick Action Button for Student */}
+        {/* Quick Action Button for Student (Visible on tablet+; mobile uses dedicated bottom nav) */}
         {role === 'student' && (
           <Button
             variant="primary"
             size="sm"
             onClick={() => onNavigate('student-submit')}
             leftIcon={<PlusCircle size={15} />}
+            className="hidden sm:inline-flex"
           >
             <span>New Complaint</span>
           </Button>

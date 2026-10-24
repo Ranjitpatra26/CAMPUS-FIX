@@ -64,7 +64,7 @@ export const MyComplaintsPage: React.FC<MyComplaintsPageProps> = ({
       <div
         className="neo-card"
         style={{
-          padding: '2rem 1.75rem',
+          padding: 'clamp(1.25rem, 3vw, 2rem) clamp(1rem, 2.5vw, 1.75rem)',
           backgroundColor: 'var(--bg-surface)',
           display: 'flex',
           alignItems: 'center',
@@ -90,7 +90,7 @@ export const MyComplaintsPage: React.FC<MyComplaintsPageProps> = ({
           <h1
             className="font-heading"
             style={{
-              fontSize: '2rem',
+              fontSize: 'clamp(1.4rem, 4vw, 2rem)',
               fontWeight: 800,
               color: 'var(--text-primary)',
               letterSpacing: '-0.03em'
@@ -107,6 +107,7 @@ export const MyComplaintsPage: React.FC<MyComplaintsPageProps> = ({
           variant="primary"
           onClick={handleNavigateSubmit}
           leftIcon={<PlusCircle size={18} />}
+          className="w-full sm:w-auto"
         >
           Submit New Complaint
         </Button>

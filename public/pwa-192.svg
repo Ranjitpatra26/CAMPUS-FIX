@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 64 64" fill="none">
+  <!-- Neo-Brutalist offset shadow -->
+  <rect x="8" y="8" width="52" height="52" rx="6" fill="#171717" />
+  <!-- Main box -->
+  <rect x="4" y="4" width="52" height="52" rx="6" fill="#C8F169" stroke="#171717" stroke-width="4" />
+  <!-- Check/Lightning geometric mark -->
+  <path d="M22 28L34 16L30 32H44L24 50L28 36H16L22 28Z" fill="#171717" stroke="#171717" stroke-width="1.5" stroke-linejoin="round"/>
+</svg>

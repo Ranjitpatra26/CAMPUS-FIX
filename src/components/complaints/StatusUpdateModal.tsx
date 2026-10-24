@@ -144,13 +144,26 @@ export const StatusUpdateModal: React.FC<StatusUpdateModalProps> = ({
                 gap: '0.75rem',
                 marginTop: '0.5rem',
                 paddingTop: '1rem',
-                borderTop: '1.5px solid var(--border-subtle)'
+                borderTop: '1.5px solid var(--border-subtle)',
+                flexWrap: 'wrap'
               }}
+              className="flex-col-reverse sm:flex-row"
             >
-              <Button type="button" variant="secondary" onClick={onClose} disabled={isLoading}>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={onClose}
+                disabled={isLoading}
+                className="w-full sm:w-auto"
+              >
                 Cancel
               </Button>
-              <Button type="submit" variant="primary" isLoading={isLoading}>
+              <Button
+                type="submit"
+                variant="primary"
+                isLoading={isLoading}
+                className="w-full sm:w-auto"
+              >
                 Apply Status Change
               </Button>
             </div>

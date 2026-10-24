@@ -53,7 +53,8 @@ export const Modal: React.FC<ModalProps> = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            padding: '1rem'
+            padding: 'clamp(0.5rem, 2vw, 1rem)',
+            boxSizing: 'border-box'
           }}
         >
           {/* Backdrop */}
@@ -81,7 +82,7 @@ export const Modal: React.FC<ModalProps> = ({
               position: 'relative',
               width: '100%',
               maxWidth: maxWidthStyles,
-              maxHeight: '90vh',
+              maxHeight: 'min(90dvh, 90vh)',
               display: 'flex',
               flexDirection: 'column',
               backgroundColor: 'var(--bg-surface)',
@@ -89,7 +90,8 @@ export const Modal: React.FC<ModalProps> = ({
               borderRadius: 'var(--radius-lg)',
               boxShadow: 'var(--shadow-offset-lg)',
               zIndex: 10,
-              overflow: 'hidden'
+              overflow: 'hidden',
+              boxSizing: 'border-box'
             }}
           >
             {/* Header */}
@@ -98,20 +100,21 @@ export const Modal: React.FC<ModalProps> = ({
                 display: 'flex',
                 alignItems: 'flex-start',
                 justifyContent: 'space-between',
-                padding: '1.25rem 1.5rem',
+                padding: 'clamp(1rem, 2.5vw, 1.25rem) clamp(1rem, 2.5vw, 1.5rem)',
                 borderBottom: 'var(--border-width) solid var(--border-color)',
-                backgroundColor: 'var(--bg-surface-secondary)'
+                backgroundColor: 'var(--bg-surface-secondary)',
+                gap: '0.75rem'
               }}
             >
               <div>
                 <h3
                   className="font-heading"
-                  style={{ fontSize: '1.25rem', color: 'var(--text-primary)', margin: 0 }}
+                  style={{ fontSize: 'clamp(1.1rem, 3vw, 1.25rem)', color: 'var(--text-primary)', margin: 0 }}
                 >
                   {title}
                 </h3>
                 {subtitle && (
-                  <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
+                  <p style={{ fontSize: '0.825rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
                     {subtitle}
                   </p>
                 )}
@@ -122,10 +125,13 @@ export const Modal: React.FC<ModalProps> = ({
                 aria-label="Close modal"
                 className="neo-btn neo-btn-secondary neo-btn-sm"
                 style={{
-                  padding: '0.3rem',
+                  padding: '0.4rem',
+                  minWidth: '38px',
+                  minHeight: '38px',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center'
+                  justifyContent: 'center',
+                  flexShrink: 0
                 }}
               >
                 <X size={18} />
@@ -135,8 +141,9 @@ export const Modal: React.FC<ModalProps> = ({
             {/* Body */}
             <div
               style={{
-                padding: '1.5rem',
-                overflowY: 'auto'
+                padding: 'clamp(1rem, 2.5vw, 1.5rem)',
+                overflowY: 'auto',
+                overscrollBehavior: 'contain'
               }}
             >
               {children}

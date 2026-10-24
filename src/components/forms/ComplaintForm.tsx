@@ -20,9 +20,7 @@ import {
   UploadCloud,
   FileCheck,
   CheckCircle2,
-  AlertTriangle,
-  ArrowRight,
-  Plus
+  ArrowRight
 } from 'lucide-react';
 
 interface ComplaintFormProps {
@@ -293,7 +291,7 @@ export const ComplaintForm: React.FC<ComplaintFormProps> = ({ onSuccess, onCance
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))',
               gap: '1rem'
             }}
           >
@@ -445,11 +443,19 @@ export const ComplaintForm: React.FC<ComplaintFormProps> = ({ onSuccess, onCance
           justifyContent: 'flex-end',
           alignItems: 'center',
           gap: '1rem',
-          marginTop: '0.5rem'
+          marginTop: '0.5rem',
+          flexWrap: 'wrap'
         }}
+        className="flex-col-reverse sm:flex-row"
       >
         {onCancel && (
-          <Button type="button" variant="secondary" onClick={onCancel} disabled={isSubmitting}>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={onCancel}
+            disabled={isSubmitting}
+            className="w-full sm:w-auto"
+          >
             Cancel
           </Button>
         )}
@@ -460,6 +466,7 @@ export const ComplaintForm: React.FC<ComplaintFormProps> = ({ onSuccess, onCance
           size="lg"
           isLoading={isSubmitting}
           rightIcon={<ArrowRight size={18} />}
+          className="w-full sm:w-auto"
         >
           Submit Complaint
         </Button>

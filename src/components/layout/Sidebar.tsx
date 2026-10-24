@@ -122,7 +122,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             }
             .sidebar-shell.mobile-open {
               transform: translateX(0);
-              width: 280px !important;
+              width: min(290px, 86vw) !important;
             }
           }
           @media (min-width: 1025px) {

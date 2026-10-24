@@ -10,7 +10,7 @@ export const DepartmentsPage: React.FC = () => {
       <div
         className="neo-card"
         style={{
-          padding: '2rem 1.75rem',
+          padding: 'clamp(1.25rem, 3vw, 2rem) clamp(1rem, 2.5vw, 1.75rem)',
           backgroundColor: 'var(--bg-surface)'
         }}
       >
@@ -30,7 +30,7 @@ export const DepartmentsPage: React.FC = () => {
         <h1
           className="font-heading"
           style={{
-            fontSize: '2rem',
+            fontSize: 'clamp(1.4rem, 4vw, 2rem)',
             fontWeight: 800,
             color: 'var(--text-primary)',
             letterSpacing: '-0.03em'
@@ -46,7 +46,7 @@ export const DepartmentsPage: React.FC = () => {
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))',
           gap: '1.25rem'
         }}
       >

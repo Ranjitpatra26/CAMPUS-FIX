@@ -86,7 +86,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       <div
         className="neo-card"
         style={{
-          padding: '2rem 1.75rem',
+          padding: 'clamp(1.25rem, 3vw, 2rem) clamp(1rem, 2.5vw, 1.75rem)',
           backgroundColor: 'var(--bg-surface)',
           display: 'flex',
           flexDirection: 'column',
@@ -135,7 +135,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <h1
               className="font-heading"
               style={{
-                fontSize: '2.1rem',
+                fontSize: 'clamp(1.5rem, 4vw, 2.1rem)',
                 fontWeight: 800,
                 color: 'var(--text-primary)',
                 letterSpacing: '-0.035em',
@@ -155,12 +155,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </p>
           </div>
 
-          <div style={{ display: 'flex', gap: '0.65rem' }}>
+          <div style={{ display: 'flex', gap: '0.65rem', width: '100%', maxWidth: 'max-content' }} className="w-full sm:w-auto">
             <Button
               variant="primary"
               size="sm"
               onClick={() => (onNavigate ? onNavigate('admin-analytics') : navigate('/admin/analytics'))}
               leftIcon={<Download size={15} />}
+              className="w-full sm:w-auto"
             >
               Analytics View
             </Button>
@@ -207,8 +208,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))',
-          gap: '1.1rem'
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(140px, 100%), 1fr))',
+          gap: 'clamp(0.75rem, 1.5vw, 1.1rem)'
         }}
       >
         <KpiCard

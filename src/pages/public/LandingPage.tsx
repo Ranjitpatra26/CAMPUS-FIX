@@ -65,6 +65,18 @@ export const LandingPage: React.FC = () => {
     }
   };
 
+  // Lock body scroll when mobile menu is open
+  React.useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [mobileMenuOpen]);
+
   return (
     <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', display: 'flex', flexDirection: 'column' }}>
       {/* ==================================================
@@ -149,7 +161,8 @@ export const LandingPage: React.FC = () => {
               onClick={() => navigate(role === 'admin' ? '/admin' : '/student')}
               rightIcon={<ArrowRight size={14} />}
             >
-              <span>Dashboard ({role.toUpperCase()})</span>
+              <span className="hidden sm:inline">Dashboard ({role.toUpperCase()})</span>
+              <span className="sm:hidden">Portal</span>
             </Button>
           ) : (
             <Button
@@ -157,7 +170,7 @@ export const LandingPage: React.FC = () => {
               size="sm"
               onClick={() => navigate('/login')}
             >
-              Sign In with SSO
+              <span>Sign In<span className="hidden sm:inline"> with SSO</span></span>
             </Button>
           )}
 
@@ -173,70 +186,84 @@ export const LandingPage: React.FC = () => {
         </div>
       </header>
 
-      {/* Mobile Drawer Menu */}
+      {/* Mobile Drawer Menu Backdrop & Panel */}
       {mobileMenuOpen && (
-        <div
-          className="neo-card animate-fade-up lg:hidden"
-          style={{
-            position: 'fixed',
-            top: 'calc(var(--navbar-height) + 8px)',
-            left: '1rem',
-            right: '1rem',
-            zIndex: 100,
-            padding: '1.25rem',
-            backgroundColor: 'var(--bg-surface)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0.75rem',
-            boxShadow: 'var(--shadow-offset-lg)'
-          }}
-        >
-          <button
-            onClick={() => scrollToSection('hero')}
-            style={{ padding: '0.5rem', textAlign: 'left', background: 'none', border: 'none', fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)', cursor: 'pointer' }}
+        <>
+          <div
+            onClick={() => setMobileMenuOpen(false)}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              zIndex: 95,
+              backdropFilter: 'blur(2px)'
+            }}
+          />
+          <div
+            className="neo-card animate-fade-up lg:hidden"
+            style={{
+              position: 'fixed',
+              top: 'calc(var(--navbar-height) + 8px)',
+              left: '1rem',
+              right: '1rem',
+              zIndex: 100,
+              padding: '1.25rem',
+              backgroundColor: 'var(--bg-surface)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.75rem',
+              boxShadow: 'var(--shadow-offset-lg)',
+              maxHeight: 'calc(100vh - var(--navbar-height) - 24px)',
+              overflowY: 'auto'
+            }}
           >
-            Home
-          </button>
-          <button
-            onClick={() => scrollToSection('how-it-works')}
-            style={{ padding: '0.5rem', textAlign: 'left', background: 'none', border: 'none', fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)', cursor: 'pointer' }}
-          >
-            How It Works
-          </button>
-          <button
-            onClick={() => scrollToSection('features')}
-            style={{ padding: '0.5rem', textAlign: 'left', background: 'none', border: 'none', fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)', cursor: 'pointer' }}
-          >
-            Features
-          </button>
-          <button
-            onClick={() => scrollToSection('benefits')}
-            style={{ padding: '0.5rem', textAlign: 'left', background: 'none', border: 'none', fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)', cursor: 'pointer' }}
-          >
-            Why CampusFix
-          </button>
-          <button
-            onClick={() => scrollToSection('preview')}
-            style={{ padding: '0.5rem', textAlign: 'left', background: 'none', border: 'none', fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)', cursor: 'pointer' }}
-          >
-            Dashboard Preview
-          </button>
-          <button
-            onClick={() => scrollToSection('metrics')}
-            style={{ padding: '0.5rem', textAlign: 'left', background: 'none', border: 'none', fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)', cursor: 'pointer' }}
-          >
-            Campus Metrics
-          </button>
+            <button
+              onClick={() => scrollToSection('hero')}
+              style={{ padding: '0.5rem', textAlign: 'left', background: 'none', border: 'none', fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)', cursor: 'pointer' }}
+            >
+              Home
+            </button>
+            <button
+              onClick={() => scrollToSection('how-it-works')}
+              style={{ padding: '0.5rem', textAlign: 'left', background: 'none', border: 'none', fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)', cursor: 'pointer' }}
+            >
+              How It Works
+            </button>
+            <button
+              onClick={() => scrollToSection('features')}
+              style={{ padding: '0.5rem', textAlign: 'left', background: 'none', border: 'none', fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)', cursor: 'pointer' }}
+            >
+              Features
+            </button>
+            <button
+              onClick={() => scrollToSection('benefits')}
+              style={{ padding: '0.5rem', textAlign: 'left', background: 'none', border: 'none', fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)', cursor: 'pointer' }}
+            >
+              Why CampusFix
+            </button>
+            <button
+              onClick={() => scrollToSection('preview')}
+              style={{ padding: '0.5rem', textAlign: 'left', background: 'none', border: 'none', fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)', cursor: 'pointer' }}
+            >
+              Dashboard Preview
+            </button>
+            <button
+              onClick={() => scrollToSection('metrics')}
+              style={{ padding: '0.5rem', textAlign: 'left', background: 'none', border: 'none', fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)', cursor: 'pointer' }}
+            >
+              Campus Metrics
+            </button>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem', paddingTop: '0.75rem', borderTop: '1.5px solid var(--border-subtle)' }}>
-            <Button variant="secondary" size="sm" onClick={() => { setMobileMenuOpen(false); navigate('/login'); }}>
-              Sign In
-            </Button>
-            <Button variant="primary" size="sm" onClick={() => { setMobileMenuOpen(false); handlePortalNavigation(); }}>
-              Open Portal
-            </Button>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem', paddingTop: '0.75rem', borderTop: '1.5px solid var(--border-subtle)' }}>
+              <Button variant="secondary" size="sm" onClick={() => { setMobileMenuOpen(false); navigate('/login'); }}>
+                Sign In
+              </Button>
+              <Button variant="primary" size="sm" onClick={() => { setMobileMenuOpen(false); handlePortalNavigation(); }}>
+                Open Portal
+              </Button>
+            </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* ==================================================

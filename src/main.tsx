@@ -20,3 +20,18 @@ createRoot(document.getElementById('root')!).render(
     </BrowserRouter>
   </StrictMode>
 );
+
+// Register Safe PWA Service Worker in production
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker
+      .register('/sw.js')
+      .then(reg => {
+        console.log('[CampusFix PWA] Service worker registered successfully:', reg.scope);
+      })
+      .catch(err => {
+        console.warn('[CampusFix PWA] Service worker registration failed:', err);
+      });
+  });
+}
+
