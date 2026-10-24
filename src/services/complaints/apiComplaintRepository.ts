@@ -318,6 +318,31 @@ export class ApiComplaintRepository implements IComplaintRepository {
         if (response.status === 401) {
           throw new Error(`Unauthorized (401): ${errorMessage}`);
         }
+        // If the deployed backend Lambda returns 404 (e.g. running an earlier Lambda version that lacks /admin/analytics/summary),
+        // resiliently fall back to querying /complaints/all and stripping student PII client-side
+        if (response.status === 404) {
+          console.warn(
+            '[CampusFix Analytics API] GET /admin/analytics/summary returned 404. Falling back to /complaints/all for analytics aggregation...'
+          );
+          const allComplaints = await this.getAllComplaints(filters);
+          return allComplaints.map(c =>
+            this.mapAnalyticsRecord({
+              complaintId: c.id,
+              title: c.title,
+              status: c.status,
+              department: c.department,
+              category: c.category,
+              priority: c.priority,
+              createdAt: c.createdAt,
+              resolvedAt: c.resolvedAt,
+              assignedTo: c.assignedTo,
+              statusHistory: c.statusHistory?.map(h => ({
+                newStatus: h.newStatus,
+                timestamp: h.timestamp
+              }))
+            })
+          );
+        }
         throw new Error(`Failed to retrieve analytics summary from DynamoDB: ${errorMessage}`);
       }
 

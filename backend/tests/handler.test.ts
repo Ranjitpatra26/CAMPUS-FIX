@@ -944,6 +944,55 @@ describe('CampusFixBackendFunction End-to-End Endpoint & Security Tests', () => 
       expect(body.items).toEqual([]);
       expect(body.nextToken).toBeUndefined();
     });
+
+    it('matches /admin/analytics/summary/ with trailing slash via normalizedPath', async () => {
+      const res = await router.dispatch(
+        createEvent({
+          method: 'GET',
+          path: '/admin/analytics/summary/',
+          token: 'admin_token'
+        })
+      );
+      expect(res.statusCode).toBe(200);
+      const body = JSON.parse((res as any).body);
+      expect(Array.isArray(body.items)).toBe(true);
+    });
+
+    it('sanitizes internal DynamoDB errors gracefully on /admin/analytics/summary', async () => {
+      const originalSend = mockClient.send;
+      mockClient.send = vi.fn().mockRejectedValue(new Error('FATAL DynamoDB internal timeout'));
+      try {
+        const res = await router.dispatch(
+          createEvent({
+            method: 'GET',
+            path: '/admin/analytics/summary',
+            token: 'admin_token'
+          })
+        );
+        expect(res.statusCode).toBe(500);
+        const body = JSON.parse((res as any).body);
+        expect(body.error).toBe('InternalServerError');
+        expect(body.message).toBe('An unexpected internal server error occurred.');
+      } finally {
+        mockClient.send = originalSend;
+      }
+    });
+
+    it('applies category and department filters on /admin/analytics/summary', async () => {
+      const res = await router.dispatch(
+        createEvent({
+          method: 'GET',
+          path: '/admin/analytics/summary',
+          token: 'admin_token',
+          queryParams: { department: 'IT Services' }
+        })
+      );
+      expect(res.statusCode).toBe(200);
+      const body = JSON.parse((res as any).body);
+      for (const item of body.items) {
+        expect(item.department).toBe('IT Services');
+      }
+    });
   });
 });
 

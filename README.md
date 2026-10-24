@@ -13,7 +13,7 @@
   <br />
 
   [![Live Demo on Vercel](https://img.shields.io/badge/LIVE%20DEMO-campus--fix--ten--iota.vercel.app-C8F169?style=for-the-badge&logo=vercel&logoColor=171717)](https://campus-fix-ten-iota.vercel.app/)
-  [![Vitest Passing](https://img.shields.io/badge/TESTS-254%20PASSED%20(100%25)-3155E7?style=for-the-badge&logo=vitest&logoColor=white)](tests/)
+  [![Vitest Passing](https://img.shields.io/badge/TESTS-258%20PASSED%20(100%25)-3155E7?style=for-the-badge&logo=vitest&logoColor=white)](tests/)
   [![React 19](https://img.shields.io/badge/REACT-19.3-61DAFB?style=for-the-badge&logo=react&logoColor=171717)](https://react.dev/)
   [![TypeScript](https://img.shields.io/badge/TYPESCRIPT-6.0-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
   [![Amazon Cognito](https://img.shields.io/badge/AWS-COGNITO%20OIDC-FF9900?style=for-the-badge&logo=amazonwebservices&logoColor=white)](https://aws.amazon.com/cognito/)
@@ -28,7 +28,7 @@
   [🔄 **Core System Workflows**](#-end-to-end-service-workflows) •
   [📸 **Desktop Walkthrough**](#-desktop-interface-walkthrough) •
   [🏃 **Quickstart Guide**](#-developer-quickstart) •
-  [🧪 **Test Suite (254 Tests)**](#-testing--quality-verification)
+  [🧪 **Test Suite (258 Tests)**](#-testing--quality-verification)
 
 </div>
 
@@ -370,12 +370,12 @@ CampusFix maintains a comprehensive automated test suite powered by **Vitest**, 
 npm test
 ```
 
-### Test Suite Results: 254 Tests Passing (100% Pass Rate)
+### Test Suite Results: 258 Tests Passing (100% Pass Rate)
 
 ```
 Test Files  19 passed (19)
-     Tests  254 passed (254)
-  Duration  3.26s
+     Tests  258 passed (258)
+  Duration  3.31s
 
 ✓ tests/complaintRepository.test.ts      (16 tests)  - In-memory repository, CRUD, recovery from corrupted storage
 ✓ tests/apiComplaintRepository.test.ts   (17 tests)  - Cloud REST API adapter, JWT injection, network retry

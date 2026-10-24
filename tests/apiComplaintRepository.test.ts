@@ -520,5 +520,71 @@ describe('ApiComplaintRepository & DynamoDB Integration', () => {
         /Access Denied \(403 Forbidden\): Administrator group membership required/
       );
     });
+
+    it('falls back to /complaints/all if /admin/analytics/summary returns 404', async () => {
+      vi.spyOn(authService, 'getIdToken').mockResolvedValue('admin.jwt');
+
+      let callCount = 0;
+      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(async (url: any) => {
+        callCount++;
+        const urlStr = String(url);
+        if (urlStr.includes('/admin/analytics/summary')) {
+          return {
+            ok: false,
+            status: 404,
+            json: async () => ({
+              error: 'NotFoundError',
+              message: 'Route GET /admin/analytics/summary not found.',
+              statusCode: 404
+            })
+          } as Response;
+        }
+
+        if (urlStr.includes('/complaints/all')) {
+          return {
+            ok: true,
+            status: 200,
+            json: async () => ({
+              complaints: [
+                {
+                  complaintId: 'CMP-LEGACY-01',
+                  title: 'Water fountain leakage',
+                  status: 'Resolved',
+                  department: 'Plumbing Works',
+                  category: 'Plumbing',
+                  priority: 'Medium',
+                  createdAt: '2026-10-21T09:00:00Z',
+                  resolvedAt: '2026-10-21T11:00:00Z',
+                  assignedTo: 'Frank Miller',
+                  studentId: 'usr-student-secret',
+                  studentName: 'Private Student',
+                  studentEmail: 'student@campus.edu',
+                  description: 'Sensitive private description'
+                }
+              ],
+              nextToken: undefined
+            })
+          } as Response;
+        }
+
+        throw new Error(`Unexpected fetch URL: ${urlStr}`);
+      });
+
+      const repo = new ApiComplaintRepository(testApiUrl);
+      const results = await repo.getAnalyticsComplaints();
+
+      expect(callCount).toBe(2);
+      expect(results.length).toBe(1);
+      const item = results[0];
+      expect(item.id).toBe('CMP-LEGACY-01');
+      expect(item.department).toBe('Plumbing Works');
+      expect(item.status).toBe('Resolved');
+
+      // Verify student privacy and PII protection:
+      expect(item.studentEmail).toBe('');
+      expect(item.studentId).toBe('');
+      expect(item.studentName).toBe('Anonymous Student');
+      expect(item.description).toBe('');
+    });
   });
 });

@@ -85,6 +85,11 @@ export class AppRouter {
     const origin = resolveCorsOrigin(this.config.allowedOrigin, requestOrigin);
     const method = event.requestContext.http.method.toUpperCase();
     const rawPath = event.rawPath || event.requestContext.http.path || '/';
+    const pathWithoutQuery = rawPath.split('?')[0];
+    const normalizedPath =
+      pathWithoutQuery.length > 1 && pathWithoutQuery.endsWith('/')
+        ? pathWithoutQuery.slice(0, -1)
+        : pathWithoutQuery;
 
     // 1. Handle CORS preflight
     if (method === 'OPTIONS') {
@@ -97,7 +102,7 @@ export class AppRouter {
 
     try {
       // 2. Health check route (unauthenticated)
-      if (rawPath === '/health' || rawPath === '/') {
+      if (normalizedPath === '/health' || normalizedPath === '/') {
         return createJsonResponse(200, {
           service: 'CampusFixBackendFunction',
           status: 'HEALTHY',
@@ -113,7 +118,7 @@ export class AppRouter {
 
       // 4. Match routes
       // Route: GET /complaints/my
-      if (rawPath === '/complaints/my' && method === 'GET') {
+      if (normalizedPath === '/complaints/my' && method === 'GET') {
         const queryParams = event.queryStringParameters || {};
         let limit = 50;
         if (queryParams.limit !== undefined) {
@@ -130,7 +135,7 @@ export class AppRouter {
       }
 
       // Route: POST /complaints
-      if (rawPath === '/complaints' && method === 'POST') {
+      if (normalizedPath === '/complaints' && method === 'POST') {
         const body = this.parseBody(event);
         const input = validateCreateComplaintInput(body);
 
@@ -184,7 +189,7 @@ export class AppRouter {
       }
 
       // Route: GET /admin/analytics/summary (Admin Only)
-      if (rawPath === '/admin/analytics/summary' && method === 'GET') {
+      if (normalizedPath === '/admin/analytics/summary' && method === 'GET') {
         this.authService.requireAdmin(user);
 
         const qp = event.queryStringParameters || {};
@@ -213,7 +218,7 @@ export class AppRouter {
       }
 
       // Route: GET /complaints/all (Admin Only)
-      if (rawPath === '/complaints/all' && method === 'GET') {
+      if (normalizedPath === '/complaints/all' && method === 'GET') {
         this.authService.requireAdmin(user);
 
         const qp = event.queryStringParameters || {};
@@ -238,7 +243,7 @@ export class AppRouter {
       }
 
       // Route: PATCH /complaints/:id/status (Admin Only)
-      const statusMatch = rawPath.match(/^\/complaints\/([^/]+)\/status$/);
+      const statusMatch = normalizedPath.match(/^\/complaints\/([^/]+)\/status$/);
       if (statusMatch) {
         if (method !== 'PATCH') throw new MethodNotAllowedError('Only PATCH is supported for /status');
         this.authService.requireAdmin(user);
@@ -289,7 +294,7 @@ export class AppRouter {
       }
 
       // Route: PATCH /complaints/:id/assign (Admin Only)
-      const assignMatch = rawPath.match(/^\/complaints\/([^/]+)\/assign$/);
+      const assignMatch = normalizedPath.match(/^\/complaints\/([^/]+)\/assign$/);
       if (assignMatch) {
         if (method !== 'PATCH') throw new MethodNotAllowedError('Only PATCH is supported for /assign');
         this.authService.requireAdmin(user);
@@ -344,7 +349,7 @@ export class AppRouter {
       }
 
       // Route: GET /complaints/:id
-      const singleMatch = rawPath.match(/^\/complaints\/([^/]+)$/);
+      const singleMatch = normalizedPath.match(/^\/complaints\/([^/]+)$/);
       if (singleMatch && method === 'GET') {
         const complaintId = decodeURIComponent(singleMatch[1]);
         const complaint = await this.db.getComplaintById(complaintId);
