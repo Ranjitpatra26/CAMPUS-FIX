@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { Button } from '../../components/ui/Button';
@@ -11,13 +11,33 @@ import {
   Cloud,
   Database,
   Lock,
-  Cpu
+  Cpu,
+  Edit3,
+  Check,
+  X
 } from 'lucide-react';
 import { getUserDisplayName, getUserEmail, isUuidString } from '../../utils/userProfile';
 
 export const SettingsPage: React.FC = () => {
-  const { user, role } = useAuth();
+  const { user, role, updateProfileName } = useAuth();
   const { theme, toggleTheme } = useTheme();
+
+  const currentDisplayName = getUserDisplayName(user, role);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState(currentDisplayName);
+
+  const handleSaveName = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (nameInput.trim()) {
+      updateProfileName(nameInput.trim());
+      setIsEditingName(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setNameInput(currentDisplayName);
+    setIsEditingName(false);
+  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '880px', margin: '0 auto' }}>
@@ -81,12 +101,100 @@ export const SettingsPage: React.FC = () => {
               backgroundColor: 'var(--bg-surface-secondary)'
             }}
           >
-            <div className="font-mono" style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-              Account Name
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: '0.2rem'
+              }}
+            >
+              <div className="font-mono" style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                Account Name
+              </div>
+              {!isEditingName && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNameInput(currentDisplayName);
+                    setIsEditingName(true);
+                  }}
+                  className="neo-btn neo-btn-secondary"
+                  style={{
+                    padding: '0.15rem 0.45rem',
+                    fontSize: '0.7rem',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.25rem',
+                    cursor: 'pointer'
+                  }}
+                  title="Customize display name"
+                >
+                  <Edit3 size={11} />
+                  <span>Edit</span>
+                </button>
+              )}
             </div>
-            <div style={{ fontWeight: 700, fontSize: '1.05rem', marginTop: '0.25rem', color: 'var(--text-primary)' }}>
-              {getUserDisplayName(user, role)}
-            </div>
+
+            {isEditingName ? (
+              <form onSubmit={handleSaveName} style={{ marginTop: '0.4rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <input
+                  type="text"
+                  value={nameInput}
+                  onChange={e => setNameInput(e.target.value)}
+                  placeholder="Enter your full name"
+                  autoFocus
+                  style={{
+                    padding: '0.4rem 0.6rem',
+                    borderRadius: 'var(--radius-sm)',
+                    border: '1.5px solid var(--border-color)',
+                    backgroundColor: 'var(--bg-surface)',
+                    color: 'var(--text-primary)',
+                    fontSize: '0.9rem',
+                    fontWeight: 600,
+                    width: '100%',
+                    boxSizing: 'border-box'
+                  }}
+                />
+                <div style={{ display: 'flex', gap: '0.4rem' }}>
+                  <button
+                    type="submit"
+                    className="neo-btn neo-btn-primary"
+                    style={{
+                      padding: '0.25rem 0.65rem',
+                      fontSize: '0.75rem',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.25rem',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <Check size={12} />
+                    <span>Save</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCancelEdit}
+                    className="neo-btn neo-btn-secondary"
+                    style={{
+                      padding: '0.25rem 0.65rem',
+                      fontSize: '0.75rem',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.25rem',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <X size={12} />
+                    <span>Cancel</span>
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div style={{ fontWeight: 700, fontSize: '1.05rem', marginTop: '0.25rem', color: 'var(--text-primary)' }}>
+                {currentDisplayName}
+              </div>
+            )}
             <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
               {getUserEmail(user) || 'Authenticated User'}
             </div>

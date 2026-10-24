@@ -16,8 +16,10 @@ import {
   Download
 } from 'lucide-react';
 import { useNotification } from '../../context/NotificationContext';
+import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { NavigationPage } from '../../components/layout/Sidebar';
+import { getUserDisplayName } from '../../utils/userProfile';
 
 interface AdminDashboardProps {
   onNavigate?: (page: NavigationPage) => void;
@@ -29,6 +31,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   onViewDetails
 }) => {
   const navigate = useNavigate();
+  const { user, role } = useAuth();
   const { addToast } = useNotification();
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [activeModalComplaint, setActiveModalComplaint] = useState<Complaint | null>(null);
@@ -104,6 +107,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               className="font-mono"
               style={{
                 fontSize: '0.8rem',
+                color: 'var(--accent-blue)',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                marginBottom: '0.35rem'
+              }}
+            >
+              Welcome back, {getUserDisplayName(user, role)} (ADMINISTRATOR)
+            </div>
+            <div
+              className="font-mono"
+              style={{
+                fontSize: '0.75rem',
                 color: 'var(--accent-lime-text)',
                 backgroundColor: 'var(--accent-lime)',
                 padding: '0.15rem 0.5rem',

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { User, UserRole } from '../types';
 import { authService, RegisterInput } from '../services/auth/authService';
 import { CognitoLoginOptions } from '../services/auth/cognitoAuthAdapter';
+import { saveCustomDisplayName } from '../utils/userProfile';
 
 interface AuthContextType {
   user: User | null;
@@ -14,6 +15,7 @@ interface AuthContextType {
   register: (input: RegisterInput) => Promise<void>;
   logout: (options?: { redirect?: boolean }) => Promise<void>;
   switchRole: (role: UserRole) => Promise<void>;
+  updateProfileName: (newName: string) => void;
   isCognitoConfigured: boolean;
   isMockAuthEnabled: boolean;
   authSource: 'cognito' | 'mock' | 'none';
@@ -166,6 +168,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const updateProfileName = (newName: string) => {
+    const trimmed = newName.trim();
+    if (!trimmed) return;
+    if (user) {
+      const updated: User = { ...user, name: trimmed };
+      setUser(updated);
+      saveCustomDisplayName(trimmed, user.id);
+      if (user.email) {
+        saveCustomDisplayName(trimmed, user.email);
+      }
+    }
+  };
+
   const role: UserRole = user?.role || 'student';
   const isCognitoConfigured = Boolean(authService.isCognitoConfigured?.());
   const isMockAuthEnabled = Boolean(authService.isMockAuthEnabled?.());
@@ -182,6 +197,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         register,
         logout,
         switchRole,
+        updateProfileName,
         isCognitoConfigured,
         isMockAuthEnabled,
         authSource

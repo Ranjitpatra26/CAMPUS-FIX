@@ -8,6 +8,7 @@ import {
 } from '../../types';
 import { IComplaintRepository, ComplaintStatistics } from './complaintRepository';
 import { authService } from '../auth/authService';
+import { getUserDisplayName } from '../../utils/userProfile';
 
 export class ApiComplaintRepository implements IComplaintRepository {
   private baseUrl: string;
@@ -108,6 +109,7 @@ export class ApiComplaintRepository implements IComplaintRepository {
       category: input.category,
       priority: input.priority,
       department: input.department || undefined,
+      studentName: getUserDisplayName(student, 'student'),
       studentDepartment: student.department || undefined
     };
 

@@ -13,6 +13,7 @@ import {
   ComplaintStatistics,
   isValidStatusTransition
 } from './complaintRepository';
+import { getUserDisplayName } from '../../utils/userProfile';
 
 const STORAGE_KEY = 'campusfix_mock_complaints_v1';
 
@@ -179,7 +180,7 @@ export class LocalStorageComplaintRepository implements IComplaintRepository {
       location: input.location.trim(),
       department: input.department,
       studentId: student.id,
-      studentName: student.name,
+      studentName: getUserDisplayName(student, 'student'),
       studentEmail: student.email,
       studentDepartment: student.department,
       createdAt: now,

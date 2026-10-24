@@ -3,7 +3,12 @@ import { User, UserRole } from '../../types';
 import { IAuthService, RegisterInput } from './authService';
 import { DEMO_STUDENT, DEMO_ADMIN } from '../mock-data/initialUsers';
 import { authLogger } from './authLogger';
-import { isUuidString } from '../../utils/userProfile';
+import {
+  isUuidString,
+  isGenericRolePlaceholder,
+  formatDisplayNameFromEmail,
+  getSavedCustomDisplayName
+} from '../../utils/userProfile';
 
 export interface CognitoConfig {
   region: string;
@@ -130,9 +135,16 @@ export class CognitoAuthAdapter implements IAuthService {
     const email = (profile.email as string) || '';
 
     // Determine reliable human-readable name without exposing Cognito UUIDs
+    const savedName =
+      getSavedCustomDisplayName(profile.sub) ||
+      (email ? getSavedCustomDisplayName(email) : null);
+
     const rawCandidate =
+      savedName ||
       (profile.name as string) ||
       [profile.given_name as string, profile.family_name as string].filter(Boolean).join(' ') ||
+      (profile['custom:name'] as string) ||
+      (profile['custom:full_name'] as string) ||
       (profile.nickname as string) ||
       (profile.preferred_username as string) ||
       '';
@@ -142,9 +154,12 @@ export class CognitoAuthAdapter implements IAuthService {
       rawCandidate &&
       rawCandidate.trim().length > 0 &&
       !isUuidString(rawCandidate) &&
-      rawCandidate.trim().toLowerCase() !== profile.sub.toLowerCase()
+      rawCandidate.trim().toLowerCase() !== profile.sub.toLowerCase() &&
+      !isGenericRolePlaceholder(rawCandidate)
     ) {
       name = rawCandidate.trim();
+    } else if (email) {
+      name = formatDisplayNameFromEmail(email, role);
     } else {
       // Sensible role-based fallback when reliable name attribute is not provided
       name = role === 'admin' ? 'Administrator' : 'Student';

@@ -20,6 +20,7 @@ import {
   FileText,
   AlertCircle
 } from 'lucide-react';
+import { formatStudentDisplayName } from '../../utils/userProfile';
 
 interface ComplaintDetailPageProps {
   complaint?: Complaint;
@@ -259,7 +260,7 @@ export const ComplaintDetailPage: React.FC<ComplaintDetailPageProps> = ({
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
             <User size={16} color="var(--text-muted)" />
             <span>
-              {complaint.studentName} ({complaint.studentDepartment})
+              {formatStudentDisplayName(complaint.studentName, complaint.studentEmail)} ({complaint.studentDepartment})
             </span>
           </div>
 

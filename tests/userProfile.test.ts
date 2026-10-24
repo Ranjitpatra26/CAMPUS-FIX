@@ -1,10 +1,14 @@
 import { describe, it, expect } from 'vitest';
 import {
   isUuidString,
+  isGenericRolePlaceholder,
+  formatDisplayNameFromEmail,
+  formatStudentDisplayName,
   getUserDisplayName,
   getUserInitials,
   getUserEmail,
-  getUserRoleLabel
+  getUserRoleLabel,
+  saveCustomDisplayName
 } from '../src/utils/userProfile';
 import { CognitoAuthAdapter } from '../src/services/auth/cognitoAuthAdapter';
 import { User } from '../src/types';
@@ -235,6 +239,93 @@ describe('UserProfile Utilities & UI Privacy Protection', () => {
 
       const mapped = (adapter as any).mapOidcUserToAppUser(mockOidcUserWithUuidStudentId);
       expect(mapped.studentId).toBeUndefined();
+    });
+
+    it('maps student with email ranjitpatra2611@gmail.com to human name "Ranjit Patra" rather than "Student"', () => {
+      const oidcUser: any = {
+        profile: {
+          sub: sampleUuid,
+          email: 'ranjitpatra2611@gmail.com',
+          'cognito:groups': ['Students']
+        }
+      };
+
+      const mapped = (adapter as any).mapOidcUserToAppUser(oidcUser);
+      expect(mapped.name).toBe('Ranjit Patra');
+      expect(mapped.role).toBe('student');
+      expect(getUserDisplayName(mapped)).toBe('Ranjit Patra');
+      expect(getUserInitials(mapped)).toBe('RP');
+    });
+
+    it('maps admin with email ranjitpatra2611@gmail.com to human name "Ranjit Patra" rather than "Administrator"', () => {
+      const oidcUser: any = {
+        profile: {
+          sub: sampleUuid,
+          email: 'ranjitpatra2611@gmail.com',
+          'cognito:groups': ['Administrators']
+        }
+      };
+
+      const mapped = (adapter as any).mapOidcUserToAppUser(oidcUser);
+      expect(mapped.name).toBe('Ranjit Patra');
+      expect(mapped.role).toBe('admin');
+      expect(getUserDisplayName(mapped)).toBe('Ranjit Patra');
+      expect(getUserInitials(mapped)).toBe('RP');
+    });
+  });
+
+  describe('formatDisplayNameFromEmail', () => {
+    it('correctly parses and formats concatenated Indian names like ranjitpatra2611', () => {
+      expect(formatDisplayNameFromEmail('ranjitpatra2611@gmail.com')).toBe('Ranjit Patra');
+      expect(formatDisplayNameFromEmail('ranjitspatra9077@gmail.com')).toBe('Ranjit Patra');
+    });
+
+    it('formats standard delimited email addresses', () => {
+      expect(formatDisplayNameFromEmail('rohan.sharma@campus.edu')).toBe('Rohan Sharma');
+      expect(formatDisplayNameFromEmail('priya_patel@campus.edu')).toBe('Priya Patel');
+      expect(formatDisplayNameFromEmail('alex-chen@campus.edu')).toBe('Alex Chen');
+    });
+
+    it('handles administrative and student role emails gracefully', () => {
+      expect(formatDisplayNameFromEmail('admin@campusfix.edu', 'admin')).toBe('Administrator');
+      expect(formatDisplayNameFromEmail('admin.estate@campusfix.edu', 'admin')).toBe('Administrator');
+      expect(formatDisplayNameFromEmail('student@campus.edu', 'student')).toBe('Student');
+      expect(formatDisplayNameFromEmail('student123@campus.edu', 'student')).toBe('Student');
+    });
+  });
+
+  describe('formatStudentDisplayName', () => {
+    it('resolves actual student name when studentName is generic placeholder but email is provided', () => {
+      expect(formatStudentDisplayName('Student', 'ranjitpatra2611@gmail.com')).toBe('Ranjit Patra');
+      expect(formatStudentDisplayName('Anonymous Student', 'rohan.sharma@campus.edu')).toBe('Rohan Sharma');
+      expect(formatStudentDisplayName('', 'priya.patel@campus.edu')).toBe('Priya Patel');
+    });
+
+    it('preserves verified human name if already provided and valid', () => {
+      expect(formatStudentDisplayName('Rohan Sharma', 'rohan.sharma@campus.edu')).toBe('Rohan Sharma');
+      expect(formatStudentDisplayName('Dr. Aris Thorne', 'admin@campusfix.edu')).toBe('Dr. Aris Thorne');
+    });
+
+    it('falls back safely to "Student" when neither valid name nor email is available', () => {
+      expect(formatStudentDisplayName('Student', '')).toBe('Student');
+      expect(formatStudentDisplayName(null, null)).toBe('Student');
+    });
+  });
+
+  describe('isGenericRolePlaceholder', () => {
+    it('identifies generic role and system placeholders', () => {
+      expect(isGenericRolePlaceholder('Student')).toBe(true);
+      expect(isGenericRolePlaceholder('student')).toBe(true);
+      expect(isGenericRolePlaceholder('Administrator')).toBe(true);
+      expect(isGenericRolePlaceholder('Admin')).toBe(true);
+      expect(isGenericRolePlaceholder('Anonymous Student')).toBe(true);
+      expect(isGenericRolePlaceholder('CampusFix User')).toBe(true);
+    });
+
+    it('returns false for actual human names', () => {
+      expect(isGenericRolePlaceholder('Ranjit Patra')).toBe(false);
+      expect(isGenericRolePlaceholder('Rohan Sharma')).toBe(false);
+      expect(isGenericRolePlaceholder('Dr. Aris Thorne')).toBe(false);
     });
   });
 });

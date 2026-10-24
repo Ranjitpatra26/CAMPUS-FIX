@@ -16,6 +16,8 @@ dist-ssr
 
 # Build artifacts
 *.zip
+.package-staging/
+backend/.package-staging/
 
 # Editor directories and files
 .vscode/*

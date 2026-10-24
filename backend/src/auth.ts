@@ -60,11 +60,47 @@ export class CognitoAuthService {
 
       const sub = payload.sub;
       const email = typeof payload.email === 'string' ? payload.email.trim().toLowerCase() : '';
-      const name =
+
+      const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      const rawCandidate =
         (typeof payload.name === 'string' && payload.name.trim()) ||
-        (typeof payload['cognito:username'] === 'string' && payload['cognito:username'].trim()) ||
-        (email.split('@')[0]) ||
-        'CampusFix User';
+        (typeof payload['custom:name'] === 'string' && payload['custom:name'].trim()) ||
+        (typeof payload['custom:full_name'] === 'string' && payload['custom:full_name'].trim()) ||
+        '';
+
+      let name: string = '';
+      if (rawCandidate && !UUID_REGEX.test(rawCandidate) && rawCandidate.toLowerCase() !== sub.toLowerCase()) {
+        name = rawCandidate;
+      } else if (email) {
+        const local = email.split('@')[0];
+        if (local === 'admin' || local === 'administrator' || local === 'admin.ops') {
+          name = 'Campus Administrator';
+        } else if (local.startsWith('student') && /^\d*$/.test(local.slice(7))) {
+          name = 'Student';
+        } else if (/[._\-+]/.test(local)) {
+          const parts = local.split(/[._\-+]+/).filter(Boolean).map(p => p.replace(/\d+/g, '')).filter(Boolean);
+          name = parts.map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()).join(' ') || local;
+        } else {
+          const noDigits = local.replace(/^\d+/, '').replace(/\d+$/, '');
+          const known = ['ranjit', 'rohan', 'priya', 'ananya', 'alex', 'rahul', 'amit', 'sourav', 'subham'];
+          let matched = false;
+          for (const prefix of known) {
+            if (noDigits.startsWith(prefix) && noDigits.length > prefix.length) {
+              let rem = noDigits.slice(prefix.length);
+              if (rem.startsWith('s') && rem.slice(1) === 'patra') rem = 'patra';
+              name = `${prefix.charAt(0).toUpperCase() + prefix.slice(1).toLowerCase()} ${rem.charAt(0).toUpperCase() + rem.slice(1).toLowerCase()}`;
+              matched = true;
+              break;
+            }
+          }
+          if (!matched) {
+            name = noDigits ? noDigits.charAt(0).toUpperCase() + noDigits.slice(1).toLowerCase() : 'CampusFix User';
+          }
+        }
+      } else {
+        const username = typeof payload['cognito:username'] === 'string' ? payload['cognito:username'].trim() : '';
+        name = username && !UUID_REGEX.test(username) ? username : 'CampusFix User';
+      }
 
       const groupsRaw = payload['cognito:groups'];
       const groups: string[] = Array.isArray(groupsRaw)

@@ -7,6 +7,7 @@ import { Input } from '../ui/Input';
 import { Select } from '../ui/Select';
 import { EmptyState } from '../ui/EmptyState';
 import { Search, Filter, Eye, ArrowUpDown, ChevronLeft, ChevronRight, SlidersHorizontal, UserCheck, RefreshCw } from 'lucide-react';
+import { formatStudentDisplayName } from '../../utils/userProfile';
 
 interface ComplaintTableProps {
   complaints: Complaint[];
@@ -263,7 +264,7 @@ export const ComplaintTable: React.FC<ComplaintTableProps> = ({
                   {isAdmin && (
                     <td>
                       <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>
-                        {complaint.studentName}
+                        {formatStudentDisplayName(complaint.studentName, complaint.studentEmail)}
                       </div>
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                         {complaint.studentDepartment}
