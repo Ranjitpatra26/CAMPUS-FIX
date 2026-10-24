@@ -30,6 +30,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [callbackError, setCallbackError] = useState<string | null>(null);
   const isMountedRef = useRef<boolean>(true);
   const hasNavigatedRef = useRef<boolean>(false);
+  const isLoggingOutRef = useRef<boolean>(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -143,14 +144,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async (options?: { redirect?: boolean }) => {
+    if (isLoggingOutRef.current) return;
+    isLoggingOutRef.current = true;
     setIsLoading(true);
     try {
-      await authService.logout(options);
+      const result = await authService.logout(options);
       setUser(null);
       setAuthSource('none');
       setCallbackError(null);
-    } finally {
+
+      // If an external Cognito redirect was initiated (window.location.href = logoutUrl),
+      // do NOT perform client-side React Router navigation, which causes duplicate
+      // or competing navigation to the landing page.
+      // If no external redirect was performed (e.g. mock mode or redirect: false),
+      // navigate cleanly to the public landing page once from the context.
+      if (!result?.redirected) {
+        navigate('/', { replace: true });
+        setIsLoading(false);
+        isLoggingOutRef.current = false;
+      }
+    } catch (err) {
+      console.error('Logout error', err);
       setIsLoading(false);
+      isLoggingOutRef.current = false;
     }
   };
 

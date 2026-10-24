@@ -345,7 +345,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                   onClick={() => {
                     setIsProfileMenuOpen(false);
                     logout();
-                    navigate('/');
                   }}
                   style={{
                     width: '100%',

@@ -12,7 +12,7 @@ export interface RegisterInput {
 export interface IAuthService {
   login(email: string, password?: string): Promise<User>;
   register(input: RegisterInput): Promise<User>;
-  logout(options?: { redirect?: boolean }): Promise<void>;
+  logout(options?: { redirect?: boolean }): Promise<void | { redirected: boolean }>;
   getCurrentUser(): Promise<User | null>;
   switchDemoRole(role: UserRole): Promise<User>;
   getDemoUsers(): { student: User; admin: User };
@@ -220,13 +220,18 @@ export class CompositeAuthService implements IAuthService {
     return this.mockAdapter.register(input);
   }
 
-  async logout(options?: { redirect?: boolean }): Promise<void> {
+  async logout(options?: { redirect?: boolean }): Promise<{ redirected: boolean }> {
     const isCognitoSession = Boolean(await this.cognitoAdapter.getCurrentUser());
     await this.mockAdapter.logout();
+    let redirected = false;
     if (this.cognitoAdapter.isCognitoConfigured()) {
       const shouldRedirect = options?.redirect ?? (!this.isMockAuthEnabled() || isCognitoSession);
+      if (shouldRedirect) {
+        redirected = true;
+      }
       await this.cognitoAdapter.logout({ redirect: shouldRedirect });
     }
+    return { redirected };
   }
 
   async getCurrentUser(): Promise<User | null> {
