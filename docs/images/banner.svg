@@ -1,0 +1,126 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" width="100%" height="100%" fill="none">
+  <defs>
+    <!-- Technical Background Grid -->
+    <pattern id="banner-grid" width="30" height="30" patternUnits="userSpaceOnUse">
+      <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#D2D0C8" stroke-width="1" stroke-opacity="0.4" />
+    </pattern>
+
+    <!-- Hard Offset Neo-Brutalist Shadows -->
+    <filter id="neo-shadow-lg" x="0" y="0" width="120%" height="120%" filterUnits="userSpaceOnUse">
+      <feOffset dx="6" dy="6" in="SourceAlpha" result="offset" />
+      <feFlood flood-color="#171717" result="color" />
+      <feComposite operator="in" in="color" in2="offset" result="shadow" />
+      <feMerge>
+        <feMergeNode in="shadow" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    <filter id="neo-shadow-sm" x="0" y="0" width="120%" height="120%" filterUnits="userSpaceOnUse">
+      <feOffset dx="3" dy="3" in="SourceAlpha" result="offset" />
+      <feFlood flood-color="#171717" result="color" />
+      <feComposite operator="in" in="color" in2="offset" result="shadow" />
+      <feMerge>
+        <feMergeNode in="shadow" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Canvas Surface -->
+  <rect width="1200" height="420" fill="#F7F6F2" rx="16" stroke="#171717" stroke-width="4" />
+  <rect width="1200" height="420" fill="url(#banner-grid)" rx="16" />
+
+  <!-- Top Accent Bar -->
+  <rect x="0" y="0" width="1200" height="14" fill="#C8F169" rx="16 16 0 0" stroke="#171717" stroke-width="2" />
+
+  <!-- Header Badge: Platform Architecture Tag -->
+  <g transform="translate(60, 48)">
+    <rect x="0" y="0" width="410" height="34" rx="4" fill="#C8F169" stroke="#171717" stroke-width="2.5" />
+    <rect x="4" y="4" width="410" height="34" rx="4" fill="#171717" />
+    <rect x="0" y="0" width="410" height="34" rx="4" fill="#C8F169" stroke="#171717" stroke-width="2.5" />
+    <text x="18" y="22" font-family="'JetBrains Mono', monospace" font-size="13" font-weight="700" fill="#171717" letter-spacing="0.08em">⚡ ENTERPRISE CAMPUS COMPLAINT MANAGEMENT</text>
+  </g>
+
+  <!-- Live Status Pill (Top Right) -->
+  <g transform="translate(860, 48)">
+    <rect x="4" y="4" width="280" height="34" rx="6" fill="#171717" />
+    <rect x="0" y="0" width="280" height="34" rx="6" fill="#FFFFFF" stroke="#171717" stroke-width="2.5" />
+    <circle cx="24" cy="17" r="6" fill="#10B981" />
+    <text x="38" y="22" font-family="'JetBrains Mono', monospace" font-size="13" font-weight="700" fill="#171717" letter-spacing="0.04em">DEPLOYED • VERCEL + AWS</text>
+  </g>
+
+  <!-- Main Brand Identity & Wordmark Group -->
+  <g transform="translate(60, 110)">
+    <!-- Logo Icon Box -->
+    <rect x="6" y="6" width="68" height="68" rx="8" fill="#171717" />
+    <rect x="0" y="0" width="68" height="68" rx="8" fill="#C8F169" stroke="#171717" stroke-width="3" />
+    <!-- Lightning Bolt Icon -->
+    <path d="M38 12L18 36H36L32 56L54 28H36L38 12Z" fill="#171717" stroke="#171717" stroke-width="2" stroke-linejoin="round" />
+
+    <!-- Typography Wordmark -->
+    <text x="88" y="52" font-family="'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif" font-size="52" font-weight="900" fill="#171717" letter-spacing="-0.04em">CAMPUS</text>
+    
+    <!-- FIX Badge -->
+    <g transform="translate(325, 8)">
+      <rect x="4" y="4" width="112" height="52" rx="6" fill="#171717" />
+      <rect x="0" y="0" width="112" height="52" rx="6" fill="#C8F169" stroke="#171717" stroke-width="3" />
+      <text x="18" y="38" font-family="'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif" font-size="44" font-weight="900" fill="#171717" letter-spacing="-0.03em">FIX</text>
+    </g>
+  </g>
+
+  <!-- Tagline Banner -->
+  <g transform="translate(60, 205)">
+    <!-- Shadow Box -->
+    <rect x="6" y="6" width="670" height="56" rx="6" fill="#171717" />
+    <!-- Main Box -->
+    <rect x="0" y="0" width="670" height="56" rx="6" fill="#3155E7" stroke="#171717" stroke-width="3" />
+    <text x="24" y="38" font-family="'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif" font-size="28" font-weight="800" fill="#FFFFFF" letter-spacing="-0.02em">YOUR CAMPUS. YOUR VOICE. YOUR FIX.</text>
+  </g>
+
+  <!-- Description Paragraph -->
+  <text x="60" y="295" font-family="'Inter', -apple-system, BlinkMacSystemFont, sans-serif" font-size="17" font-weight="500" fill="#4B5563" letter-spacing="-0.01em">
+    Transparent college incident reporting, real-time SLA triage across 8 divisions, and immutable audit logs.
+  </text>
+  <text x="60" y="322" font-family="'Inter', -apple-system, BlinkMacSystemFont, sans-serif" font-size="16" font-weight="600" fill="#1F2937" letter-spacing="-0.01em">
+    Powered by React 19, TypeScript, Amazon Cognito OIDC, AWS Lambda Serverless, DynamoDB &amp; Amazon SES.
+  </text>
+
+  <!-- Feature Metric Pills (Bottom Row) -->
+  <g transform="translate(60, 350)">
+    <!-- Pill 1: 254 Tests Passing -->
+    <g transform="translate(0, 0)">
+      <rect x="3" y="3" width="220" height="38" rx="6" fill="#171717" />
+      <rect x="0" y="0" width="220" height="38" rx="6" fill="#FFFFFF" stroke="#171717" stroke-width="2.5" />
+      <text x="16" y="24" font-family="'JetBrains Mono', monospace" font-size="13" font-weight="700" fill="#171717">✓ 254 Vitest Tests (100%)</text>
+    </g>
+
+    <!-- Pill 2: Zero Trust Cognito -->
+    <g transform="translate(236, 0)">
+      <rect x="3" y="3" width="245" height="38" rx="6" fill="#171717" />
+      <rect x="0" y="0" width="245" height="38" rx="6" fill="#FFFFFF" stroke="#171717" stroke-width="2.5" />
+      <text x="16" y="24" font-family="'JetBrains Mono', monospace" font-size="13" font-weight="700" fill="#171717">🔒 Zero-Trust Cognito OIDC</text>
+    </g>
+
+    <!-- Pill 3: Serverless Lambda & DynamoDB -->
+    <g transform="translate(497, 0)">
+      <rect x="3" y="3" width="275" height="38" rx="6" fill="#171717" />
+      <rect x="0" y="0" width="275" height="38" rx="6" fill="#FFFFFF" stroke="#171717" stroke-width="2.5" />
+      <text x="16" y="24" font-family="'JetBrains Mono', monospace" font-size="13" font-weight="700" fill="#171717">⚡ Serverless Lambda + DynamoDB</text>
+    </g>
+
+    <!-- Pill 4: PWA Ready -->
+    <g transform="translate(788, 0)">
+      <rect x="3" y="3" width="160" height="38" rx="6" fill="#171717" />
+      <rect x="0" y="0" width="160" height="38" rx="6" fill="#C8F169" stroke="#171717" stroke-width="2.5" />
+      <text x="16" y="24" font-family="'JetBrains Mono', monospace" font-size="13" font-weight="800" fill="#171717">📱 PWA &amp; Mobile</text>
+    </g>
+
+    <!-- Pill 5: Dual Mode -->
+    <g transform="translate(964, 0)">
+      <rect x="3" y="3" width="176" height="38" rx="6" fill="#171717" />
+      <rect x="0" y="0" width="176" height="38" rx="6" fill="#FFFFFF" stroke="#171717" stroke-width="2.5" />
+      <text x="16" y="24" font-family="'JetBrains Mono', monospace" font-size="13" font-weight="700" fill="#171717">🎛️ Dual-Mode Engine</text>
+    </g>
+  </g>
+</svg>
