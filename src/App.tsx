@@ -8,8 +8,6 @@ import { RequireAuth } from './components/auth/RequireAuth';
 // Public Pages
 import { LandingPage } from './pages/public/LandingPage';
 import { LoginPage } from './pages/auth/LoginPage';
-import { RegisterPage } from './pages/auth/RegisterPage';
-import { ForgotPasswordPage } from './pages/auth/ForgotPasswordPage';
 import { NotFoundPage } from './pages/common/NotFoundPage';
 
 // Student Pages
@@ -74,8 +72,8 @@ export const App: React.FC = () => {
         {/* Public Routes */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/register" element={<Navigate to="/login" replace />} />
+        <Route path="/forgot-password" element={<Navigate to="/login" replace />} />
 
         {/* Student Protected Routes */}
         <Route

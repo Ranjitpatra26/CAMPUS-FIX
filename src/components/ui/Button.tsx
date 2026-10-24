@@ -5,6 +5,7 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   size?: 'sm' | 'md' | 'lg';
   fullWidth?: boolean;
   isLoading?: boolean;
+  loadingText?: string;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
 }
@@ -15,6 +16,7 @@ export const Button: React.FC<ButtonProps> = ({
   size = 'md',
   fullWidth = false,
   isLoading = false,
+  loadingText,
   leftIcon,
   rightIcon,
   disabled,
@@ -68,7 +70,7 @@ export const Button: React.FC<ButtonProps> = ({
               100% { transform: rotate(360deg); }
             }
           `}</style>
-          <span>Processing...</span>
+          <span>{loadingText || 'Processing...'}</span>
         </>
       ) : (
         <>

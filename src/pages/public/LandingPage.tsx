@@ -152,24 +152,13 @@ export const LandingPage: React.FC = () => {
               <span>Dashboard ({role.toUpperCase()})</span>
             </Button>
           ) : (
-            <>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => navigate('/login')}
-              >
-                Sign In
-              </Button>
-
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={() => navigate('/register')}
-                className="hidden sm:inline-flex"
-              >
-                Register
-              </Button>
-            </>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => navigate('/login')}
+            >
+              Sign In with SSO
+            </Button>
           )}
 
           {/* Mobile Hamburger Toggle */}
@@ -1579,10 +1568,7 @@ export const LandingPage: React.FC = () => {
               Admin Operations
             </button>
             <button onClick={() => navigate('/login')} style={{ background: 'none', border: 'none', textAlign: 'left', color: 'var(--text-secondary)', fontSize: '0.875rem', cursor: 'pointer' }}>
-              Login Screen
-            </button>
-            <button onClick={() => navigate('/register')} style={{ background: 'none', border: 'none', textAlign: 'left', color: 'var(--text-secondary)', fontSize: '0.875rem', cursor: 'pointer' }}>
-              Register Account
+              Sign In (Campus SSO)
             </button>
           </div>
 

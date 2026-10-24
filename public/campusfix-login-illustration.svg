@@ -1,0 +1,188 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 500" width="100%" height="100%" fill="none" role="img" aria-labelledby="illustrationTitle illustrationDesc">
+  <title id="illustrationTitle">CampusFix Issue Resolution &amp; Tracking Illustration</title>
+  <desc id="illustrationDesc">Neo-brutalist illustration depicting academic campus infrastructure and transparent complaint resolution workflow.</desc>
+  
+  <defs>
+    <!-- Subtle technical grid -->
+    <pattern id="login-grid" width="30" height="30" patternUnits="userSpaceOnUse">
+      <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#D2D0C8" stroke-width="1" stroke-opacity="0.45" />
+    </pattern>
+
+    <!-- Hard-edge shadow filter for neo-brutalist depth -->
+    <filter id="neo-shadow" x="0" y="0" width="120%" height="120%" filterUnits="userSpaceOnUse">
+      <feOffset dx="6" dy="6" in="SourceAlpha" result="offset" />
+      <feFlood flood-color="#171717" result="color" />
+      <feComposite operator="in" in="color" in2="offset" result="shadow" />
+      <feMerge>
+        <feMergeNode in="shadow" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Technical Background Grid Canvas -->
+  <rect width="600" height="500" fill="#F7F6F2" rx="12" />
+  <rect width="600" height="500" fill="url(#login-grid)" rx="12" />
+
+  <!-- Geometric Accent Backdrops -->
+  <!-- Lime Accent Block -->
+  <rect x="70" y="50" width="460" height="400" rx="8" fill="#C8F169" stroke="#171717" stroke-width="2.5" />
+  <!-- Ivory Inner Plate -->
+  <rect x="80" y="60" width="440" height="380" rx="6" fill="#FDFBF7" stroke="#171717" stroke-width="2.5" />
+
+  <!-- ============================================== -->
+  <!-- BACKGROUND: Modern Campus Academic Hall Silhouette -->
+  <!-- ============================================== -->
+  <g id="campus-architecture" opacity="0.95">
+    <!-- Base Campus Groundline -->
+    <line x1="95" y1="390" x2="505" y2="390" stroke="#171717" stroke-width="3" stroke-linecap="round" />
+
+    <!-- Left Building: Engineering Hall -->
+    <rect x="110" y="240" width="110" height="150" fill="#E9E8E2" stroke="#171717" stroke-width="2" />
+    <!-- Roof pediment -->
+    <polygon points="105,240 165,200 225,240" fill="#C8F169" stroke="#171717" stroke-width="2" />
+    <!-- Hall Windows -->
+    <rect x="125" y="260" width="22" height="28" rx="2" fill="#3155E7" fill-opacity="0.15" stroke="#171717" stroke-width="1.5" />
+    <rect x="160" y="260" width="22" height="28" rx="2" fill="#3155E7" fill-opacity="0.15" stroke="#171717" stroke-width="1.5" />
+    <rect x="195" y="260" width="15" height="28" rx="2" fill="#3155E7" fill-opacity="0.15" stroke="#171717" stroke-width="1.5" />
+    <rect x="125" y="305" width="22" height="28" rx="2" fill="#FFFFFF" stroke="#171717" stroke-width="1.5" />
+    <rect x="160" y="305" width="22" height="28" rx="2" fill="#FFFFFF" stroke="#171717" stroke-width="1.5" />
+    <rect x="195" y="305" width="15" height="28" rx="2" fill="#FFFFFF" stroke="#171717" stroke-width="1.5" />
+
+    <!-- Center Building: Academic Clocktower -->
+    <rect x="235" y="140" width="85" height="250" fill="#FFFFFF" stroke="#171717" stroke-width="2.5" />
+    <!-- Tower Roof -->
+    <polygon points="230,140 277,80 325,140" fill="#3155E7" stroke="#171717" stroke-width="2.5" />
+    <!-- Flag atop tower -->
+    <line x1="277" y1="80" x2="277" y2="60" stroke="#171717" stroke-width="2" />
+    <polygon points="277,60 298,68 277,76" fill="#C8F169" stroke="#171717" stroke-width="1.5" />
+    <!-- Clock Dial -->
+    <circle cx="277" cy="180" r="20" fill="#FFFFFF" stroke="#171717" stroke-width="2" />
+    <circle cx="277" cy="180" r="16" fill="#F7F6F2" stroke="#171717" stroke-width="1" />
+    <line x1="277" y1="180" x2="277" y2="169" stroke="#171717" stroke-width="2" stroke-linecap="round" />
+    <line x1="277" y1="180" x2="285" y2="180" stroke="#171717" stroke-width="2" stroke-linecap="round" />
+    <!-- Belfry Louvers -->
+    <rect x="250" y="215" width="15" height="25" rx="2" fill="#171717" />
+    <rect x="272" y="215" width="12" height="25" rx="2" fill="#171717" />
+    <rect x="290" y="215" width="15" height="25" rx="2" fill="#171717" />
+
+    <!-- Right Building: Central Library & Tech Bay -->
+    <rect x="335" y="200" width="155" height="190" fill="#E9E8E2" stroke="#171717" stroke-width="2" />
+    <path d="M 370 200 A 45 40 0 0 1 455 200 Z" fill="#C8F169" stroke="#171717" stroke-width="2" />
+    <!-- Library Tall Glass Windows -->
+    <rect x="355" y="225" width="24" height="60" rx="2" fill="#3155E7" fill-opacity="0.25" stroke="#171717" stroke-width="1.5" />
+    <rect x="390" y="225" width="24" height="60" rx="2" fill="#3155E7" fill-opacity="0.25" stroke="#171717" stroke-width="1.5" />
+    <rect x="425" y="225" width="24" height="60" rx="2" fill="#3155E7" fill-opacity="0.25" stroke="#171717" stroke-width="1.5" />
+    <rect x="460" y="225" width="18" height="60" rx="2" fill="#3155E7" fill-opacity="0.25" stroke="#171717" stroke-width="1.5" />
+    <!-- Library Entrance -->
+    <rect x="395" y="340" width="35" height="50" rx="2" fill="#171717" />
+
+    <!-- Campus Flora (Neo-Brutalist Block Trees) -->
+    <rect x="100" y="360" width="6" height="30" fill="#171717" />
+    <circle cx="103" cy="350" r="16" fill="#C8F169" stroke="#171717" stroke-width="2" />
+    <rect x="495" y="360" width="6" height="30" fill="#171717" />
+    <polygon points="498,325 480,370 516,370" fill="#C8F169" stroke="#171717" stroke-width="2" />
+  </g>
+
+  <!-- ============================================== -->
+  <!-- FLOATING DECORATIVE BADGES & CARDS -->
+  <!-- ============================================== -->
+
+  <!-- Top Floating Ticket Pill -->
+  <g transform="translate(105, 95)">
+    <!-- Shadow -->
+    <rect x="4" y="4" width="130" height="28" rx="4" fill="#171717" />
+    <!-- Body -->
+    <rect x="0" y="0" width="130" height="28" rx="4" fill="#FFFFFF" stroke="#171717" stroke-width="2" />
+    <circle cx="14" cy="14" r="5" fill="#3155E7" />
+    <text x="26" y="18" font-family="'Space Grotesk', system-ui, sans-serif" font-weight="700" font-size="11" fill="#171717" letter-spacing="0.5">TICKET #CF-2804</text>
+  </g>
+
+  <!-- Top-Right Floating Resolution Verification Badge -->
+  <g transform="translate(365, 80) rotate(3)">
+    <!-- Shadow -->
+    <rect x="4" y="4" width="145" height="32" rx="4" fill="#171717" />
+    <!-- Body -->
+    <rect x="0" y="0" width="145" height="32" rx="4" fill="#C8F169" stroke="#171717" stroke-width="2" />
+    <path d="M 12 16 L 16 20 L 24 11" fill="none" stroke="#171717" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+    <text x="32" y="20" font-family="'Space Grotesk', system-ui, sans-serif" font-weight="800" font-size="10.5" fill="#171717" letter-spacing="0.5">VERIFIED AUDIT LOG</text>
+  </g>
+
+  <!-- ============================================== -->
+  <!-- FOREGROUND: Prominent Floating Complaint Ticket Card -->
+  <!-- ============================================== -->
+  <g transform="translate(140, 180)">
+    <!-- Hard Neo-Brutalist Shadow -->
+    <rect x="8" y="8" width="340" height="225" rx="8" fill="#171717" />
+    <!-- Card Frame -->
+    <rect x="0" y="0" width="340" height="225" rx="8" fill="#FFFFFF" stroke="#171717" stroke-width="3" />
+
+    <!-- Card Header / Top Bar -->
+    <rect x="0" y="0" width="340" height="46" rx="8" fill="#F7F6F2" stroke="#171717" stroke-width="2" />
+    
+    <!-- Category Badge: Infrastructure -->
+    <g transform="translate(14, 11)">
+      <rect x="0" y="0" width="105" height="24" rx="4" fill="#FFFFFF" stroke="#171717" stroke-width="1.5" />
+      <circle cx="10" cy="12" r="3.5" fill="#3155E7" />
+      <text x="18" y="16" font-family="'Space Grotesk', system-ui, sans-serif" font-weight="700" font-size="10.5" fill="#171717">Infrastructure</text>
+    </g>
+
+    <!-- Status Badge: IN PROGRESS -->
+    <g transform="translate(225, 11)">
+      <rect x="0" y="0" width="100" height="24" rx="4" fill="#C8F169" stroke="#171717" stroke-width="1.5" />
+      <circle cx="12" cy="12" r="3.5" fill="#171717" />
+      <text x="21" y="16" font-family="'Space Grotesk', system-ui, sans-serif" font-weight="800" font-size="10" fill="#171717" letter-spacing="0.5">IN PROGRESS</text>
+    </g>
+
+    <!-- Complaint Title & Metadata -->
+    <text x="16" y="78" font-family="'Space Grotesk', system-ui, sans-serif" font-weight="800" font-size="16" fill="#171717">Classroom Projector Issue</text>
+    <text x="16" y="98" font-family="system-ui, sans-serif" font-size="11.5" fill="#4A4A4A">Lecture Hall B-204 · HDMI output signal loss · Reported by Student</text>
+
+    <!-- Divider Line -->
+    <line x1="16" y1="112" x2="324" y2="112" stroke="#D2D0C8" stroke-width="1.5" stroke-dasharray="4 3" />
+
+    <!-- 3-STAGE PROGRESS WORKFLOW INDICATOR -->
+    <g transform="translate(22, 130)">
+      <!-- Progress Bar Track -->
+      <line x1="20" y1="16" x2="276" y2="16" stroke="#D2D0C8" stroke-width="3" />
+      <!-- Active Progress Track (from stage 1 to stage 2) -->
+      <line x1="20" y1="16" x2="148" y2="16" stroke="#3155E7" stroke-width="3" />
+
+      <!-- Step 1: Submitted (Completed) -->
+      <circle cx="20" cy="16" r="12" fill="#3155E7" stroke="#171717" stroke-width="2" />
+      <path d="M 16 16 L 19 19 L 24 13" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+      <text x="20" y="40" text-anchor="middle" font-family="'Space Grotesk', system-ui, sans-serif" font-weight="700" font-size="9.5" fill="#171717">SUBMITTED</text>
+
+      <!-- Step 2: Under Review / In Progress (Current) -->
+      <circle cx="148" cy="16" r="12" fill="#C8F169" stroke="#171717" stroke-width="2.5" />
+      <circle cx="148" cy="16" r="4.5" fill="#171717" />
+      <text x="148" y="40" text-anchor="middle" font-family="'Space Grotesk', system-ui, sans-serif" font-weight="800" font-size="9.5" fill="#171717">IN PROGRESS</text>
+
+      <!-- Step 3: Resolved (Upcoming) -->
+      <circle cx="276" cy="16" r="12" fill="#FFFFFF" stroke="#171717" stroke-width="2" />
+      <circle cx="276" cy="16" r="3.5" fill="#D2D0C8" />
+      <text x="276" y="40" text-anchor="middle" font-family="'Space Grotesk', system-ui, sans-serif" font-weight="600" font-size="9.5" fill="#737373">RESOLVED</text>
+    </g>
+
+    <!-- Card Footer Status -->
+    <rect x="0" y="185" width="340" height="40" rx="0 0 8 8" fill="#F7F6F2" stroke="#171717" stroke-width="1.5" />
+    <g transform="translate(16, 202)">
+      <!-- Assigned Technician Pin -->
+      <circle cx="6" cy="8" r="4" fill="#3155E7" />
+      <text x="16" y="11" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#171717">Assigned: AV Facilities Technician</text>
+      <text x="235" y="11" font-family="system-ui, sans-serif" font-size="10.5" fill="#737373">SLA: &lt; 24h</text>
+    </g>
+  </g>
+
+  <!-- Geometric Decors (Neo-Brutalist Crosses & Pluses) -->
+  <g fill="#171717" opacity="0.8">
+    <!-- Top-left cross -->
+    <path d="M 45 40 L 55 40 M 50 35 L 50 45" stroke="#171717" stroke-width="2.5" stroke-linecap="square" />
+    <!-- Bottom-right cross -->
+    <path d="M 545 440 L 555 440 M 550 435 L 550 445" stroke="#171717" stroke-width="2.5" stroke-linecap="square" />
+    <!-- Floating blue diamond -->
+    <rect x="495" y="130" width="12" height="12" rx="2" fill="#3155E7" stroke="#171717" stroke-width="1.5" transform="rotate(45 501 136)" />
+    <!-- Floating lime diamond -->
+    <rect x="115" y="150" width="10" height="10" rx="2" fill="#C8F169" stroke="#171717" stroke-width="1.5" transform="rotate(45 120 155)" />
+  </g>
+</svg>

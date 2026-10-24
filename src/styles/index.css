@@ -556,3 +556,175 @@ html, body {
     page-break-inside: avoid !important;
   }
 }
+
+/* ==================================================
+   CAMPUSFIX COGNITO LOGIN REDESIGN STYLES
+   ================================================== */
+.login-page-root {
+  min-height: 100vh;
+  display: flex;
+  background-color: var(--bg-primary);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.login-auth-panel {
+  flex: 1 1 50%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(2rem, 5vw, 4rem) clamp(1.5rem, 4vw, 3.5rem);
+  max-width: 620px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.login-visual-panel {
+  flex: 1 1 50%;
+  background-color: var(--bg-surface-secondary);
+  border-left: var(--border-width) solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(2rem, 4vw, 3.5rem) clamp(1.5rem, 3vw, 2.5rem);
+  box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
+}
+
+.login-illustration-wrapper {
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.login-illustration-img {
+  width: 100%;
+  height: auto;
+  max-height: 380px;
+  object-fit: contain;
+  display: block;
+}
+
+.login-benefits-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.875rem;
+  width: 100%;
+  max-width: 520px;
+  margin-top: 1.75rem;
+}
+
+.login-benefit-card {
+  background-color: var(--bg-surface);
+  border: var(--border-width-sm) solid var(--border-color);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-offset-xs);
+  padding: 0.85rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.login-benefit-card:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: var(--shadow-offset);
+}
+
+.login-benefit-icon-wrapper {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border-color);
+  background-color: var(--accent-lime);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.25rem;
+  flex-shrink: 0;
+}
+
+.login-benefit-title {
+  font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 800;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  color: var(--text-primary);
+  text-transform: uppercase;
+}
+
+.login-benefit-desc {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  line-height: 1.35;
+}
+
+.login-security-badge {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem 1.15rem;
+  background-color: var(--bg-surface);
+  border: var(--border-width-sm) solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-offset-xs);
+  margin-top: 1.5rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1023px) {
+  .login-page-root {
+    flex-direction: column;
+  }
+  .login-auth-panel {
+    max-width: 100%;
+    padding: 2.25rem 1.5rem 2rem;
+  }
+  .login-visual-panel {
+    border-left: none;
+    border-top: var(--border-width) solid var(--border-color);
+    padding: 2.25rem 1.5rem 3rem;
+  }
+  .login-benefits-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+    max-width: 480px;
+  }
+  .login-benefit-card {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.875rem 1rem;
+  }
+  .login-benefit-icon-wrapper {
+    margin-bottom: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-auth-panel {
+    padding: 1.5rem 1rem 1.75rem;
+  }
+  .login-visual-panel {
+    padding: 1.75rem 1rem 2.25rem;
+  }
+  .login-heading {
+    font-size: 2rem !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-page-root,
+  .login-page-root *,
+  .login-page-root *::before,
+  .login-page-root *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
