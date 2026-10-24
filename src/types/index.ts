@@ -115,3 +115,21 @@ export interface ComplaintFilterOptions {
   department?: DepartmentName | 'All';
   sortBy?: 'newest' | 'oldest' | 'priority' | 'status';
 }
+
+export type NotificationType =
+  | 'ticket_update'
+  | 'system'
+  | 'assignment'
+  | 'submission';
+
+export interface NotificationItem {
+  id: string;
+  title: string;
+  description: string;
+  timestamp: string;
+  read: boolean;
+  type: NotificationType;
+  ticketId?: string;
+  createdAt?: string;
+  isDismissed?: boolean;
+}

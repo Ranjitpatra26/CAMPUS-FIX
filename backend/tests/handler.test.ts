@@ -994,5 +994,374 @@ describe('CampusFixBackendFunction End-to-End Endpoint & Security Tests', () => 
       }
     });
   });
+
+  describe('Phase 4 & 5: In-App Notification System & Event-Driven Persistence', () => {
+    it('returns 401 when accessing notifications without an auth token', async () => {
+      const res = await router.dispatch(
+        createEvent({
+          method: 'GET',
+          path: '/notifications'
+        })
+      );
+      expect(res.statusCode).toBe(401);
+      const body = JSON.parse((res as any).body);
+      expect(body.error).toBe('UnauthorizedError');
+    });
+
+    it('returns empty notifications list and 0 unread count for fresh users', async () => {
+      const res = await router.dispatch(
+        createEvent({
+          method: 'GET',
+          path: '/notifications',
+          token: 'student_token_2'
+        })
+      );
+      expect(res.statusCode).toBe(200);
+      const body = JSON.parse((res as any).body);
+      expect(Array.isArray(body.notifications)).toBe(true);
+      expect(body.notifications.length).toBe(0);
+      expect(body.unreadCount).toBe(0);
+
+      const countRes = await router.dispatch(
+        createEvent({
+          method: 'GET',
+          path: '/notifications/unread-count',
+          token: 'student_token_2'
+        })
+      );
+      expect(countRes.statusCode).toBe(200);
+      const countBody = JSON.parse((countRes as any).body);
+      expect(countBody.unreadCount).toBe(0);
+    });
+
+    it('creates an admin in-app notification when a student submits a complaint', async () => {
+      // 1. Student 1 submits a complaint
+      const submitRes = await router.dispatch(
+        createEvent({
+          method: 'POST',
+          path: '/complaints',
+          token: 'student_token_1',
+          body: {
+            title: 'Broken Projector in Hall B',
+            description: 'The projector turns off after 5 minutes of continuous usage in lectures.',
+            category: 'Classroom Facilities',
+            priority: 'High',
+            location: 'Science Building Hall B'
+          }
+        })
+      );
+      expect(submitRes.statusCode).toBe(201);
+      const complaint = JSON.parse((submitRes as any).body);
+
+      // 2. Admin retrieves notifications
+      const adminNotifsRes = await router.dispatch(
+        createEvent({
+          method: 'GET',
+          path: '/notifications',
+          token: 'admin_token'
+        })
+      );
+      expect(adminNotifsRes.statusCode).toBe(200);
+      const adminNotifs = JSON.parse((adminNotifsRes as any).body);
+      expect(adminNotifs.notifications.length).toBeGreaterThanOrEqual(1);
+
+      const found = adminNotifs.notifications.find(
+        (n: any) => n.relatedComplaintId === complaint.complaintId
+      );
+      expect(found).toBeDefined();
+      expect(found.recipientUserId).toBe('admin');
+      expect(found.type).toBe('submission');
+      expect(found.isRead).toBe(false);
+
+      // 3. Student 2 cannot see this admin notification
+      const student2Res = await router.dispatch(
+        createEvent({
+          method: 'GET',
+          path: '/notifications',
+          token: 'student_token_2'
+        })
+      );
+      const student2Notifs = JSON.parse((student2Res as any).body);
+      expect(student2Notifs.notifications.length).toBe(0);
+    });
+
+    it('creates a student in-app notification when admin updates complaint status', async () => {
+      // 1. Submit complaint by Student 1
+      const submitRes = await router.dispatch(
+        createEvent({
+          method: 'POST',
+          path: '/complaints',
+          token: 'student_token_1',
+          body: {
+            title: 'Water Leak in Restroom',
+            description: 'Major leak on floor 2 restroom causing water pooling.',
+            category: 'Sanitation',
+            priority: 'Critical',
+            location: 'Main Block Floor 2'
+          }
+        })
+      );
+      const complaint = JSON.parse((submitRes as any).body);
+
+      // 2. Admin transitions status to 'In Progress'
+      const updateRes = await router.dispatch(
+        createEvent({
+          method: 'PATCH',
+          path: `/complaints/${complaint.complaintId}/status`,
+          token: 'admin_token',
+          body: {
+            newStatus: 'In Progress',
+            remark: 'Plumbing technician dispatched.'
+          }
+        })
+      );
+      expect(updateRes.statusCode).toBe(200);
+
+      // 3. Student 1 checks notifications
+      const studentRes = await router.dispatch(
+        createEvent({
+          method: 'GET',
+          path: '/notifications',
+          token: 'student_token_1'
+        })
+      );
+      expect(studentRes.statusCode).toBe(200);
+      const studentData = JSON.parse((studentRes as any).body);
+      const statusNotif = studentData.notifications.find(
+        (n: any) => n.relatedComplaintId === complaint.complaintId
+      );
+      expect(statusNotif).toBeDefined();
+      expect(statusNotif.recipientUserId).toBe('student-sub-001');
+      expect(statusNotif.title).toContain('In Progress');
+      expect(statusNotif.isRead).toBe(false);
+      expect(studentData.unreadCount).toBeGreaterThanOrEqual(1);
+    });
+
+    it('persists mark-as-read and decreases unread count in DynamoDB', async () => {
+      // Submit and assign complaint to generate notification
+      const submitRes = await router.dispatch(
+        createEvent({
+          method: 'POST',
+          path: '/complaints',
+          token: 'student_token_1',
+          body: {
+            title: 'Lab AC Fault and Heating',
+            description: 'Ambient temperature is at 32C in the laboratory rooms.',
+            category: 'Electrical Maintenance',
+            priority: 'Medium',
+            location: 'Engineering Lab 4'
+          }
+        })
+      );
+      expect(submitRes.statusCode).toBe(201);
+      const complaint = JSON.parse((submitRes as any).body);
+
+      const assignRes = await router.dispatch(
+        createEvent({
+          method: 'PATCH',
+          path: `/complaints/${complaint.complaintId}/assign`,
+          token: 'admin_token',
+          body: {
+            department: 'Electrical Works',
+            assignedTo: 'Engineer Raman',
+            remark: 'Assigned for filter cleaning'
+          }
+        })
+      );
+      expect(assignRes.statusCode).toBe(200);
+
+      // Fetch Student 1 unread notification
+      const listBefore = await router.dispatch(
+        createEvent({
+          method: 'GET',
+          path: '/notifications',
+          token: 'student_token_1'
+        })
+      );
+      expect(listBefore.statusCode).toBe(200);
+      const dataBefore = JSON.parse((listBefore as any).body);
+      expect(dataBefore.notifications.length).toBeGreaterThanOrEqual(1);
+      const targetNotif = dataBefore.notifications[0];
+      expect(targetNotif.isRead).toBe(false);
+
+      // Mark single notification as read
+      const readRes = await router.dispatch(
+        createEvent({
+          method: 'PATCH',
+          path: `/notifications/${targetNotif.notificationId}/read`,
+          token: 'student_token_1'
+        })
+      );
+      expect(readRes.statusCode).toBe(200);
+      const updated = JSON.parse((readRes as any).body);
+      expect(updated.isRead).toBe(true);
+      expect(updated.readAt).toBeDefined();
+
+      // Simulated reload: retrieve again and ensure read state persists
+      const listAfter = await router.dispatch(
+        createEvent({
+          method: 'GET',
+          path: '/notifications',
+          token: 'student_token_1'
+        })
+      );
+      const dataAfter = JSON.parse((listAfter as any).body);
+      const verifiedNotif = dataAfter.notifications.find(
+        (n: any) => n.notificationId === targetNotif.notificationId
+      );
+      expect(verifiedNotif.isRead).toBe(true);
+    });
+
+    it('prevents Student 2 from reading or dismissing Student 1 notifications (403 Forbidden)', async () => {
+      // 1. Student 1 submits complaint & admin updates status -> creates Student 1 notification
+      const submitRes = await router.dispatch(
+        createEvent({
+          method: 'POST',
+          path: '/complaints',
+          token: 'student_token_1',
+          body: {
+            title: 'Chemistry Lab Gas Leak',
+            description: 'Unusual sulfur odor detected in chemistry lab B.',
+            category: 'Laboratory Equipment',
+            priority: 'Critical',
+            location: 'Science Block Lab B'
+          }
+        })
+      );
+      const complaint = JSON.parse((submitRes as any).body);
+
+      await router.dispatch(
+        createEvent({
+          method: 'PATCH',
+          path: `/complaints/${complaint.complaintId}/status`,
+          token: 'admin_token',
+          body: {
+            newStatus: 'In Progress',
+            remark: 'Safety inspectors on site.'
+          }
+        })
+      );
+
+      // Student 1 has notification
+      const student1Res = await router.dispatch(
+        createEvent({
+          method: 'GET',
+          path: '/notifications',
+          token: 'student_token_1'
+        })
+      );
+      const student1Data = JSON.parse((student1Res as any).body);
+      const targetNotif = student1Data.notifications[0];
+      expect(targetNotif).toBeDefined();
+
+      // Student 2 attempts to mark Student 1 notification as read
+      const unauthorizedRead = await router.dispatch(
+        createEvent({
+          method: 'PATCH',
+          path: `/notifications/${targetNotif.notificationId}/read`,
+          token: 'student_token_2'
+        })
+      );
+      expect(unauthorizedRead.statusCode).toBe(403);
+      const errBody = JSON.parse((unauthorizedRead as any).body);
+      expect(errBody.error).toBe('ForbiddenError');
+
+      // Student 2 attempts to dismiss Student 1 notification
+      const unauthorizedDismiss = await router.dispatch(
+        createEvent({
+          method: 'PATCH',
+          path: `/notifications/${targetNotif.notificationId}/dismiss`,
+          token: 'student_token_2'
+        })
+      );
+      expect(unauthorizedDismiss.statusCode).toBe(403);
+    });
+
+    it('supports mark-all-as-read and dismissal persisting after simulated reload', async () => {
+      // 1. Student 1 submits complaint & admin updates status -> creates Student 1 notification
+      const submitRes = await router.dispatch(
+        createEvent({
+          method: 'POST',
+          path: '/complaints',
+          token: 'student_token_1',
+          body: {
+            title: 'Hostel Wi-Fi Disconnection',
+            description: 'Hostel Block 3 fourth floor router keeps disconnecting.',
+            category: 'IT and Wi-Fi',
+            priority: 'High',
+            location: 'Hostel Block 3 Floor 4'
+          }
+        })
+      );
+      const complaint = JSON.parse((submitRes as any).body);
+
+      await router.dispatch(
+        createEvent({
+          method: 'PATCH',
+          path: `/complaints/${complaint.complaintId}/status`,
+          token: 'admin_token',
+          body: {
+            newStatus: 'In Progress',
+            remark: 'IT engineer assigned.'
+          }
+        })
+      );
+
+      // Mark all notifications as read for Student 1
+      const markAllRes = await router.dispatch(
+        createEvent({
+          method: 'PATCH',
+          path: '/notifications/read-all',
+          token: 'student_token_1'
+        })
+      );
+      expect(markAllRes.statusCode).toBe(200);
+      const markAllData = JSON.parse((markAllRes as any).body);
+      expect(markAllData.success).toBe(true);
+
+      const unreadCountRes = await router.dispatch(
+        createEvent({
+          method: 'GET',
+          path: '/notifications/unread-count',
+          token: 'student_token_1'
+        })
+      );
+      const unreadBody = JSON.parse((unreadCountRes as any).body);
+      expect(unreadBody.unreadCount).toBe(0);
+
+      // Dismiss a notification
+      const listRes = await router.dispatch(
+        createEvent({
+          method: 'GET',
+          path: '/notifications',
+          token: 'student_token_1'
+        })
+      );
+      const notifToDismiss = JSON.parse((listRes as any).body).notifications[0];
+      expect(notifToDismiss).toBeDefined();
+
+      const dismissRes = await router.dispatch(
+        createEvent({
+          method: 'PATCH',
+          path: `/notifications/${notifToDismiss.notificationId}/dismiss`,
+          token: 'student_token_1'
+        })
+      );
+      expect(dismissRes.statusCode).toBe(200);
+      expect(JSON.parse((dismissRes as any).body).isDismissed).toBe(true);
+
+      // Verify it is excluded on reload
+      const listAfterDismiss = await router.dispatch(
+        createEvent({
+          method: 'GET',
+          path: '/notifications',
+          token: 'student_token_1'
+        })
+      );
+      const remaining = JSON.parse((listAfterDismiss as any).body).notifications;
+      expect(remaining.some((n: any) => n.notificationId === notifToDismiss.notificationId)).toBe(false);
+    });
+  });
 });
+
 

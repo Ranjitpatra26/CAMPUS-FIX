@@ -133,3 +133,29 @@ export interface AnalyticsRecord {
   statusHistory?: AnalyticsHistoryEntry[];
 }
 
+export type NotificationType =
+  | 'ticket_update'
+  | 'assignment'
+  | 'submission'
+  | 'system';
+
+export interface InAppNotification {
+  complaintId: string; // Base table PK: "NOTIF#" + notificationId
+  notificationId: string;
+  recipientUserId: string; // Cognito sub or 'admin'
+  recipientRole: UserRole; // 'student' | 'admin'
+  studentId: string; // For GSI_StudentQueue index partition key (= recipientUserId)
+  entityType: 'NOTIFICATION';
+  type: NotificationType;
+  title: string;
+  message: string;
+  description?: string;
+  relatedComplaintId?: string;
+  ticketId?: string;
+  createdAt: string; // ISO 8601 UTC (GSI sort key)
+  readAt?: string | null;
+  isRead: boolean;
+  dismissedAt?: string | null;
+  isDismissed: boolean;
+}
+

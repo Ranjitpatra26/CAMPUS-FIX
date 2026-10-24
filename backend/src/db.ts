@@ -4,7 +4,8 @@ import {
   PutCommand,
   GetCommand,
   QueryCommand,
-  UpdateCommand
+  UpdateCommand,
+  DeleteCommand
 } from '@aws-sdk/lib-dynamodb';
 import {
   Complaint,
@@ -12,7 +13,8 @@ import {
   ComplaintStatus,
   DepartmentName,
   StatusHistoryEntry,
-  AnalyticsRecord
+  AnalyticsRecord,
+  InAppNotification
 } from './types.js';
 import { BackendConfig, config as defaultConfig } from './config.js';
 import { NotFoundError, BadRequestError } from './errors.js';
@@ -92,8 +94,13 @@ export class DynamoDBComplaintRepository {
       TableName: this.tableName,
       IndexName: 'GSI_StudentQueue',
       KeyConditionExpression: 'studentId = :studentId',
+      FilterExpression: '#entityType = :entityType',
+      ExpressionAttributeNames: {
+        '#entityType': 'entityType'
+      },
       ExpressionAttributeValues: {
-        ':studentId': studentId
+        ':studentId': studentId,
+        ':entityType': 'COMPLAINT'
       },
       ScanIndexForward: false, // Newest first
       Limit: Math.min(Math.max(limit, 1), 100),
@@ -339,6 +346,190 @@ export class DynamoDBComplaintRepository {
 
     const result = await this.docClient.send(command);
     return result.Attributes as Complaint;
+  }
+
+  async createNotification(notification: InAppNotification): Promise<InAppNotification> {
+    const command = new PutCommand({
+      TableName: this.tableName,
+      Item: notification,
+      ConditionExpression: 'attribute_not_exists(complaintId)'
+    });
+
+    try {
+      await this.docClient.send(command);
+      return notification;
+    } catch (err: any) {
+      if (err.name === 'ConditionalCheckFailedException') {
+        const existing = await this.getNotificationById(notification.notificationId);
+        if (existing) return existing;
+      }
+      throw err;
+    }
+  }
+
+  async getNotificationById(notificationId: string): Promise<InAppNotification | null> {
+    const complaintId = notificationId.startsWith('NOTIF#')
+      ? notificationId
+      : `NOTIF#${notificationId}`;
+
+    const command = new GetCommand({
+      TableName: this.tableName,
+      Key: { complaintId }
+    });
+
+    const result = await this.docClient.send(command);
+    if (!result.Item) return null;
+    return result.Item as InAppNotification;
+  }
+
+  async getNotificationsByRecipient(
+    recipientId: string,
+    options?: {
+      limit?: number;
+      nextToken?: string;
+      unreadOnly?: boolean;
+      includeDismissed?: boolean;
+    }
+  ): Promise<{ notifications: InAppNotification[]; unreadCount: number; nextToken?: string }> {
+    const filterExpressions: string[] = ['#entityType = :entityType'];
+    const expressionAttributeNames: Record<string, string> = {
+      '#entityType': 'entityType'
+    };
+    const expressionAttributeValues: Record<string, any> = {
+      ':recipientId': recipientId,
+      ':entityType': 'NOTIFICATION'
+    };
+
+    if (!options?.includeDismissed) {
+      filterExpressions.push('(#isDismissed = :false OR attribute_not_exists(#isDismissed))');
+      expressionAttributeNames['#isDismissed'] = 'isDismissed';
+      expressionAttributeValues[':false'] = false;
+    }
+
+    if (options?.unreadOnly) {
+      filterExpressions.push('(#isRead = :false OR attribute_not_exists(#isRead))');
+      expressionAttributeNames['#isRead'] = 'isRead';
+      expressionAttributeValues[':false'] = false;
+    }
+
+    const limit = Math.min(Math.max(options?.limit || 50, 1), 100);
+
+    const command = new QueryCommand({
+      TableName: this.tableName,
+      IndexName: 'GSI_StudentQueue',
+      KeyConditionExpression: 'studentId = :recipientId',
+      FilterExpression: filterExpressions.join(' AND '),
+      ExpressionAttributeNames: expressionAttributeNames,
+      ExpressionAttributeValues: expressionAttributeValues,
+      ScanIndexForward: false, // Newest first
+      Limit: limit,
+      ExclusiveStartKey: this.decodeToken(options?.nextToken)
+    });
+
+    const result = await this.docClient.send(command);
+    const items = (result.Items || []) as InAppNotification[];
+
+    const unreadCount = items.filter(n => !n.isRead && !n.isDismissed).length;
+
+    return {
+      notifications: items,
+      unreadCount,
+      nextToken: this.encodeToken(result.LastEvaluatedKey)
+    };
+  }
+
+  async markNotificationAsRead(notificationId: string): Promise<InAppNotification> {
+    const complaintId = notificationId.startsWith('NOTIF#')
+      ? notificationId
+      : `NOTIF#${notificationId}`;
+
+    const now = new Date().toISOString();
+    const command = new UpdateCommand({
+      TableName: this.tableName,
+      Key: { complaintId },
+      UpdateExpression: 'SET #isRead = :true, #readAt = :now',
+      ExpressionAttributeNames: {
+        '#isRead': 'isRead',
+        '#readAt': 'readAt'
+      },
+      ExpressionAttributeValues: {
+        ':true': true,
+        ':now': now
+      },
+      ReturnValues: 'ALL_NEW'
+    });
+
+    const result = await this.docClient.send(command);
+    if (!result.Attributes) {
+      throw new NotFoundError(`Notification "${notificationId}" does not exist.`);
+    }
+    return result.Attributes as InAppNotification;
+  }
+
+  async markAllNotificationsAsRead(recipientId: string): Promise<number> {
+    const { notifications } = await this.getNotificationsByRecipient(recipientId, {
+      unreadOnly: true,
+      limit: 100
+    });
+
+    let updatedCount = 0;
+    for (const n of notifications) {
+      if (!n.isRead) {
+        await this.markNotificationAsRead(n.notificationId);
+        updatedCount++;
+      }
+    }
+    return updatedCount;
+  }
+
+  async dismissNotification(notificationId: string): Promise<InAppNotification> {
+    const complaintId = notificationId.startsWith('NOTIF#')
+      ? notificationId
+      : `NOTIF#${notificationId}`;
+
+    const now = new Date().toISOString();
+    const command = new UpdateCommand({
+      TableName: this.tableName,
+      Key: { complaintId },
+      UpdateExpression: 'SET #isDismissed = :true, #dismissedAt = :now, #isRead = :true',
+      ExpressionAttributeNames: {
+        '#isDismissed': 'isDismissed',
+        '#dismissedAt': 'dismissedAt',
+        '#isRead': 'isRead'
+      },
+      ExpressionAttributeValues: {
+        ':true': true,
+        ':now': now
+      },
+      ReturnValues: 'ALL_NEW'
+    });
+
+    const result = await this.docClient.send(command);
+    if (!result.Attributes) {
+      throw new NotFoundError(`Notification "${notificationId}" does not exist.`);
+    }
+    return result.Attributes as InAppNotification;
+  }
+
+  async deleteNotification(notificationId: string): Promise<void> {
+    const complaintId = notificationId.startsWith('NOTIF#')
+      ? notificationId
+      : `NOTIF#${notificationId}`;
+
+    const command = new DeleteCommand({
+      TableName: this.tableName,
+      Key: { complaintId }
+    });
+
+    await this.docClient.send(command);
+  }
+
+  async getUnreadNotificationCount(recipientId: string): Promise<number> {
+    const res = await this.getNotificationsByRecipient(recipientId, {
+      unreadOnly: true,
+      limit: 100
+    });
+    return res.notifications.length;
   }
 }
 
